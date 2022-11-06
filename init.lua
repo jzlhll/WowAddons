@@ -1,281 +1,337 @@
 aura_env.beInit = false
 aura_env.ssub = string.sub
 aura_env.debug = true
+aura_env.WID = 602
+aura_env.NM = UnitName("player")
 	
 aura_env.init = function(env)
 	if env.beInit then
 		return
 	end
 
-	env.baseShowMode = -1
+	env.showMod = 0
 	if env.debug then 
 		env.CNL = "SAY"
 	else
 		env.CNL = "RAID"
 	end
+	
+	env.MK = "ATSELLER"
 
 	env.beInit = true
-	
-	env.WID = 600
-	
-	env.cells = {}
-	env.cellsNum = 0
+
 	env.ssplit = string.split
 	env.slen = string.len
 	env.sgsub = string.gsub
 	env.tsort = table.sort
+	env.trm = table.remove
 	env.tinsert = table.insert
-	env.members = nil
+	env.mceil = math.ceil
+	env.membs = {}
 	env.randId = random(1000)
+	--sync
 	env.sellings = {}
-	
-	env.pageIndex = 1
-	e.sellCnt = 0
-	
+	env.curPgIdx = 1
+	env.sellCnt = 0
+	--sync end
+
 	env.Cmu = LibStub:GetLibrary("AceComm-3.0")
-    env.Cmu:RegisterComm("AllanAtSell", function(prefix, message, _, sname) end)
+    env.Cmu:RegisterComm(env.MK, function(prefix, message, _, sname) end)
 	env.spacePatten = string.format("([^%s]+)", ' ')
 	
-	env.myStrSplit = function(e, str)
+	--[[
+	Table转化为string 
+	--]]
+	function TableToStr(t, bArry)
+		if t == nil then
+			return ""
+		end
+		local retstr = "{"
+
+		local i = 1
+		for key, value in pairs(t) do
+			local signal = ","
+			if i == 1 then
+				signal = ""
+			end
+
+			if bArry then
+				retstr = retstr .. signal .. ToStringEx(value)
+			else
+				if type(key) == "number" or type(key) == "string" then
+					retstr = retstr .. signal .. "[" .. ToStringEx(key) .. "]=" .. ToStringEx(value)
+				else
+					if type(key) == "userdata" then
+						retstr =
+							retstr .. signal .. "*s" .. TableToStr(getmetatable(key)) .. "*e" .. "=" .. ToStringEx(value)
+					else
+						retstr = retstr .. signal .. key .. "=" .. ToStringEx(value)
+					end
+				end
+			end
+			i = i + 1
+		end
+		retstr = retstr .. "}"
+		return retstr 
+	end
+
+	--[[
+		String转画table
+	--]]
+	function StrToTable(str)
+		if str == nil or type(str) ~= "string" or str == "" then
+			return {}
+		end
+		return loadstring("return " .. str)()
+	end
+
+	--[[
+		table与字符串转化	
+	--]]
+	function ToStringEx(value)
+		if type(value) == "table" then
+			return TableToStr(value)
+		elseif type(value) == "string" then
+			return '"' .. value .. '"'
+		else
+			return tostring(value)
+		end
+	end
+
+	env._3split = function(e, str, stCnt)
 		local r = {}
 		e.sgsub(str, e.spacePatten,
 			function(c)
 				r[#r + 1] = c
 			end
 		)
-		return r
+		local sz = #r
+		local ed = r[sz]
+		local mid = ""
+		for i = (stCnt + 1), (sz - 1) do
+			mid = mid..r[i]
+		end
+
+		if stCnt == 2 then
+			return r[1], r[2], mid, ed
+		elseif stCnt == 3 then
+			return r[1], r[2], r[3], mid, ed
+		else
+			return r[1], mid, ed
+		end
 	end
-	
-	env.styleGray = function(btn) 
+
+	env.styleBtn = function(btn) 
 		local t = btn:CreateTexture(nil, "ARTWORK")
 		t:SetColorTexture(0.3,0.3,0.3,1)
 		t:SetAllPoints()
 		btn:SetNormalTexture(t)
 	end
 
-	env.parse = function(e, msg)
-		local r = e.myStrSplit(e, msg)
-		local sz = #r
-		local pre,link,pr
-		if sz == 3 then
-			pre = r[1]
-			link = r[2]
-			pr = r[3]
-		elseif sz == 5 then
-			pre = r[1]
-			link = r[2]..r[3]..r[4]
-			pr = r[5]
-		elseif sz == 7 then
-			pre = r[1]
-			link = r[2]..r[3]..r[4]..r[5]..r[6]
-			pr = r[7]
-		end
-
+	env.parse = function(e, cnt, link, pr)
         if pr == nil then return end
         e.randId = e.randId + 1
-
-		local cnt = ""
-		for i = e.slen(pre), 1, -1 do
-			local c = e.ssub(pre, i , i)
-			if c == 'l' then break end
-			cnt = e.ssub(pre, i , i)..cnt
-		end
-		if cnt == "" then cnt = "1" end
-        local s = "publish("..e.randId..") "..pr.." "..cnt.." "..link
-        e.Cmu:SendCommMessage("AllanAtSell", s, e.CNL)
+        local s = "publ"..e.randId.." "..pr.." "..link.." "..cnt
+        e.Cmu:SendCommMessage(e.MK, s, e.CNL)
     end
-	
-	env.sell = function(e, msg, pubName)
-		local r = e.myStrSplit(e, msg)
-		local sz = #r
-        local pub,prs,cnt,link
-		if sz == 4 then
-			pub = r[1]
-			prs = r[2]
-			cnt = r[3]
-			link = r[4]
-		elseif sz == 6 then
-			pub = r[1]
-			prs = r[2]
-			cnt = r[3]
-			link = r[4]..r[5]..r[6]
-		elseif sz == 8 then
-			pub = r[1]
-			prs = r[2]
-			cnt = r[3]
-			link = r[4]..r[5]..r[6]..r[7]..r[8]
-		end
 
-        local sid = e.ssub(pub, 9, -2)
-
-        e.members = {}
+	env.sell = function(e, sid, prs, cnt, link, puber)
+        e.membs = {}
 		if UnitInRaid("player") then
 			local num = GetNumGroupMembers()
 			for i = 1, num do
 				local nm, rank, _, lvl, _, cls = GetRaidRosterInfo(i)
 				local c = RAID_CLASS_COLORS[cls]
-				e.members[nm] = format("|cff%02x%02x%02x%s|r", c.r*255, c.g*255, c.b*255, nm)
+				e.membs[nm] = format("|cff%02x%02x%02x%s|r", c.r*255, c.g*255, c.b*255, nm)
 			end
 		end
 		
-		e.sellings[sid] = {
-		}
-		local s = e.sellings[sid]
-		s.link = link
-		s.publishName = pubName
-		s.startPrice = prs
-		s.count = cnt
-        
-		if e.baseShowMode == -1 then
-			e.baseShowMode = 1
-			e.showBase(e)
+		local s = {}
+		s.lnk = link
+		s.pub = puber
+		s.spr = prs
+		s.cnt = cnt
+		s.sid = sid
+		s.idx = 0
+		s.aus = {}
+		s.inf = ""
+		s.lck = 0
+		e.tinsert(e.sellings, s)
+		if e.showMod == 0 then
+			e.showMod = 1
+			e.showbs(e)
 		end
-		
-		e.sellCnt = e.sellCnt + 1
-
-		e.refreshCells(e)
-
-		e.baseUI.cntTitle:SetText("在售"..e.sellCnt.."样")
+		e.onCnt(e, 1)
+		e.refreshc(e)
     end
-
-	env.findCell = function(e, sid)
-		local it = nil
-        for i=1,e.cellsNum do
-			local c = e.cells[i]
-            if c.sid ~= nil and c.sid == sid then
-                it = c
-                break
-            end
-        end
-		return it
+	
+	env.sync = function(e)
+		e.Cmu:SendCommMessage(e.MK, s, e.CNL)
+	end
+	
+	env.findSell = function(e, sid)
+		local r = nil
+		for _,t in pairs(e.sellings) do
+			if t.sid == sid then
+				r = t
+				break
+			end
+		end
+		return r
 	end
 
-	env.upCell = function(e, sid, buy, info)
-		if e.debug then buy = buy..random(30) end
-		local selling = e.sellings[sid]
-		if selling == nil then return end
-		if selling.auctions == nil then
-			selling.auctions = {}
-			selling.idx = 0
+	env.onCnt = function(e, dif)
+		e.sellCnt = e.sellCnt + dif
+		e.baseUI.cntTitle:SetText("在售"..e.sellCnt.."样")
+	end
+
+	env.findc = function(e, sid)
+		local b = e.baseUI
+		if b.cell1 and b.cell1.sid == sid then
+			return b.cell1
 		end
-		selling.idx = selling.idx + 1
-		local ac = selling.auctions
+		
+		if b.cell2 and b.cell2.sid == sid then
+			return b.cell2
+		end
+		
+		if b.cell3 and b.cell3.sid == sid then
+			return b.cell3
+		end
+
+		return nil
+	end
+
+	env.upc = function(e, sid, buyer, info)
+		if e.debug then buyer = buyer..random(30) end
+		local s = e.findSell(e, sid)
+		if s == nil then return end
+
+		s.idx = s.idx + 1
+		local ac = s.aus
 		
 		local have = false
 		for _,v in pairs(ac) do
-			if v.b == buy then
-				v.i = selling.idx
+			if v.b == buyer then
+				v.i = s.idx
 				have = true
 				v.v = info
 				break
 			end
 		end
 		if not have then
-			e.tinsert(ac, {v=info, i=selling.idx, b=buy})
+			e.tinsert(ac, {v=info, i=s.idx, b=buyer})
 		end
 
 		e.tsort(ac, function(a, b) return a.i > b.i end)
 
 		local nor = ""
-		local pass = ""
+		local pas = ""
 		local clrName
 		
 		for _, nc in pairs(ac) do
-			clrName = e.members[nc.b] or nc.b
+			clrName = e.membs[nc.b] or nc.b
 			if nc.v == "p" or nc.v == "P" then
-				pass = pass.."["..clrName.."]p".."  "
+				pas = pas.."["..clrName.."]p".."  "
 			else
 				nor = nor.."["..clrName.."]"..nc.v.."  "
 			end
 		end
-		selling.infoText = nor.."\n"..pass
+		s.inf = nor.."\n"..pas
 
-		local cell = e.findCell(e, sid)
-		if cell then
-			cell.info:SetText(selling.infoText)
+		local c = e.findc(e, sid)
+		if c then
+			c.info:SetText(s.inf)
+		else
+			e.refreshc(e)
 		end
     end
 
-	env.stopCell = function(e, sid)
-		for i=1,e.cellsNum do
-			local c = e.cells[i]
-            if c.sid ~= nil then
-                c:Hide()
-				c.sid = nil
-            end
-        end
-		
-		print("after stop Cell and change it ")
-		if e.sellCnt then
-			e.sellCnt = e.sellCnt - 1
-			print("todo page")
-			e.baseUI.cntTitle:SetText("在售"..e.sellCnt.."件")
+	env.stopc = function(e, sid)
+		local i = nil
+		for k,t in pairs(e.sellings) do
+			if t.sid == sid then
+				i = k
+				break
+			end
+		end
+		if i then
+			e.trm(e.sellings, i)
+			e.onCnt(e, -1)
+			e.refreshc(e)
 		end
 	end
-	
-	env.pauseCell = function(e, sid)
-        local it = e.findCell(e, sid)
-        if it then
-            if it.auBtn:IsEnabled() then
-                it.auBtn:SetEnabled(false)
-                it.auEdit:SetEnabled(false)
-                it.auPBtn:SetEnabled(false)
+
+	env.pausec = function(e, sid)
+		local s = e.findSell(e, sid)
+		if s.lck == 0 then
+			s.lck = 1
+		else
+			s.lck = 0
+		end
+
+        local c = e.findc(e, sid)
+        if c then
+            if c.auBtn:IsEnabled() then
+                c.auBtn:SetEnabled(false)
+                c.auEdit:SetEnabled(false)
+                c.auPBtn:SetEnabled(false)
             else
-                it.auBtn:SetEnabled(true)
-                it.auEdit:SetEnabled(true)
-                it.auPBtn:SetEnabled(true)
+                c.auBtn:SetEnabled(true)
+                c.auEdit:SetEnabled(true)
+                c.auPBtn:SetEnabled(true)
             end
         end
     end
-	
-	env.createCell = function(e, id)
+
+	env.createc = function(e, id)
         local c = CreateFrame("Frame", nil, e.baseUI, BackdropTemplateMixin and "BackdropTemplate" or nil)
         c.env = e
         c:SetWidth(e.WID - 20)
         c:SetHeight(157)
-        c:SetPoint("CENTER", 0, 0 - 165*(id - 1))
+        c:SetPoint("CENTER", 0, -15 - 165*(id - 2))
 		local drop = {
 			bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
 			tile = true, tileSize = 16, edgeSize = 16,
 		}
         c:SetBackdrop(drop)
-		c:SetBackdropColor(0.2, 0.2, 0.2, 0.9)
+		c:SetBackdropColor(0.25, 0.25, 0.25, 0.88)
         
         c.title = c:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
         c.title:SetPoint("TOPLEFT", c, 10, -2)
 		
-        c.ownClsBtn = CreateFrame("Button", nil, c, "UIPanelButtonTemplate")
-        c.ownClsBtn:SetWidth(70)
-        c.ownClsBtn:SetHeight(28)
-        c.ownClsBtn:SetText("关闭拍卖")
-        c.ownClsBtn:SetPoint("LEFT", c, "RIGHT", -78, 60)
-        c.ownClsBtn.parent = c
-        c.ownClsBtn:SetScript("OnClick", function(self)
-                local p = self.parent
-                local msg = "atstop("..p.sid..")"
-                if p.scount == "1" or p.scount == 1 then
-                    SendChatMessage("结束拍卖"..p.slink, p.env.CNL)
-                else
-                    SendChatMessage("结束拍卖"..p.slink.." X"..p.scount.."件", p.env.CNL)
+        c.clsBtn = CreateFrame("Button", nil, c, "UIPanelButtonTemplate")
+        c.clsBtn:SetWidth(70)
+        c.clsBtn:SetHeight(28)
+        c.clsBtn:SetText("关闭拍卖")
+        c.clsBtn:SetPoint("LEFT", c, "RIGHT", -78, 60)
+        c.clsBtn.par = c
+        c.clsBtn:SetScript("OnClick", function(self)
+                local p = self.par
+                local msg = "stop"..p.sid
+				local w = "结束拍卖"..p.slink
+                if p.scount ~= "1" and p.scount ~= 1 then
+					w = w.." X"..p.scount.."件"
                 end
-                p.env.Cmu:SendCommMessage("AllanAtSell", msg, p.env.CNL)
+				SendChatMessage(w, p.env.CNL)
+                p.env.Cmu:SendCommMessage(p.env.MK, msg, p.env.CNL)
             end)
-		e.styleGray(c.ownClsBtn)
-        c.ownPauBtn = CreateFrame("Button", nil, c, "UIPanelButtonTemplate")
-        c.ownPauBtn:SetWidth(55)
-        c.ownPauBtn:SetHeight(28)
-        c.ownPauBtn:SetText("锁定")
-        c.ownPauBtn:SetPoint("LEFT", c, "RIGHT", -140, 60)
-        c.ownPauBtn.parent = c
-        c.ownPauBtn:SetScript("OnClick", function(self)
-                local p = self.parent
-                local msg = "atpause("..p.sid..")"
-                p.env.Cmu:SendCommMessage("AllanAtSell", msg, p.env.CNL)
+		e.styleBtn(c.clsBtn)
+        c.pauBtn = CreateFrame("Button", nil, c, "UIPanelButtonTemplate")
+        c.pauBtn:SetWidth(55)
+        c.pauBtn:SetHeight(28)
+        c.pauBtn:SetText("锁定")
+        c.pauBtn:SetPoint("LEFT", c, "RIGHT", -140, 60)
+        c.pauBtn.par = c
+        c.pauBtn:SetScript("OnClick", function(self)
+                local p = self.par
+                local msg = "paus"..p.sid
+                p.env.Cmu:SendCommMessage(p.env.MK, msg, p.env.CNL)
             end)
-		e.styleGray(c.ownPauBtn)
+		e.styleBtn(c.pauBtn)
 		
 		local iconFr = CreateFrame("Frame", nil, c, BackdropTemplateMixin and "BackdropTemplate" or nil)
-		iconFr.parent = c
+		iconFr.par = c
 		iconFr:SetWidth(e.WID - 20)
         iconFr:SetHeight(28)
         iconFr:SetPoint("TOPLEFT", 0, -28)
@@ -290,8 +346,8 @@ aura_env.init = function(env)
         c.text:SetPoint("LEFT", c.icon, "RIGHT", 3, 0)
 		
 		iconFr:SetScript("OnEnter", function(self)
-                GameTooltip:SetOwner(self.parent, "ANCHOR_RIGHT",0,-200)
-                GameTooltip:SetHyperlink(self.parent.slink)
+                GameTooltip:SetOwner(self.par, "ANCHOR_RIGHT",0,-200)
+                GameTooltip:SetHyperlink(self.par.slink)
                 GameTooltip:Show()
         end)
         
@@ -324,19 +380,19 @@ aura_env.init = function(env)
         c.auBtn:SetHeight(28)
         c.auBtn:SetText("发送")
         c.auBtn:SetPoint("RIGHT", c.auEdit, "RIGHT", 62, 0)
-		e.styleGray(c.auBtn)
-        c.auBtn.parent = c
+		e.styleBtn(c.auBtn)
+        c.auBtn.par = c
 		c.ts = time()
         c.auBtn:SetScript("OnClick", function(self)
-                local p = self.parent
+                local p = self.par
 				local cur = time()
 				
 				if cur - p.ts > .2 then
 				    p.auEdit:ClearFocus()
 					local ed = p.auEdit:GetText()
 					if ed ~= "" then
-						local msg = "(sid"..p.sid..") "..p.auEdit:GetText()
-						p.env.Cmu:SendCommMessage("AllanAtSell", msg, p.env.CNL)
+						local msg = "buys"..p.sid.." "..p.auEdit:GetText()
+						p.env.Cmu:SendCommMessage(p.env.MK, msg, p.env.CNL)
 					end
 					
 					p.ts = cur
@@ -348,104 +404,116 @@ aura_env.init = function(env)
         c.auPBtn:SetHeight(28)
         c.auPBtn:SetText("P")
         c.auPBtn:SetPoint("RIGHT", c.auBtn, "RIGHT", 40, 0)
-        c.auPBtn.parent = c
+        c.auPBtn.par = c
         c.auPBtn:SetScript("OnClick", function(self)
-                local p = self.parent
+                local p = self.par
 				local cur = time()
-				
 				if cur - p.ts > .2 then
 					p.auEdit:ClearFocus()
-					local msg = "(sid"..p.sid..") p"
-					p.env.Cmu:SendCommMessage("AllanAtSell", msg, p.env.CNL)
-					
+					local msg = "buys"..p.sid.." p"
+					p.env.Cmu:SendCommMessage(p.env.MK, msg, p.env.CNL)
 					p.ts = cur
 				end
             end)
-		e.styleGray(c.auPBtn)
+		e.styleBtn(c.auPBtn)
 
-		local holdBtn = CreateFrame("Button", nil, c, "UIPanelButtonTemplate")
-        holdBtn:SetWidth(55)
-        holdBtn:SetHeight(28)
-        holdBtn:SetText("等等")
-        holdBtn:SetPoint("LEFT", c, "RIGHT", -62, -60)
-        holdBtn.parent = c
-        holdBtn:SetScript("OnClick", function(self)
-                local p = self.parent
+		local h = CreateFrame("Button", nil, c, "UIPanelButtonTemplate")
+        h:SetWidth(55)
+        h:SetHeight(28)
+        h:SetText("等等")
+        h:SetPoint("LEFT", c, "RIGHT", -62, -60)
+        h.par = c
+        h:SetScript("OnClick", function(self)
+                local p = self.par
                 p.auEdit:ClearFocus()
-				SendChatMessage(""..p.slink.." 请等等，容我三思。", "RAID")
+				SendChatMessage(""..p.slink.." 请等等，容我三思。", p.env.CNL)
             end)
-		e.styleGray(holdBtn)
+		e.styleBtn(h)
         return c
     end
-	
-	env.refreshCells = function(e)
-		local off = e.sellCnt % 3
-		local pages = e.sellCnt / 3
-		local upPage = false
-		if off > 0 then
-			pages = pages + 1
-			upPage = true
-		end
-		
-		local curPage = tonumber(e.baseUI.pageText:GetText())
-		e.baseUI.pageText:SetText(""..pages)
-		
-		if e.pageIndex == pages then
-			
-		end
-		
-		local link, pubName, stPrice, count	= sidInfo.link, sidInfo.publishName, sidInfo.startPrice, sidInfo.count
 
-        local cell = e.reuseCell(e)
-        if cell == nil then
-            cell = aura_env.createCell(e)
-			local id = e.cellsNum + 1
-			e.cells[id] = cell
-			e.cellsNum = id
-        end
+	env.refreshc = function(e)
+		local np = e.mceil(e.sellCnt / 3)
+		if np == 0 then np = 1 end
 
-        cell.sid = sid
-        cell.slink = link
-        cell.scount = count
-
-        
-		if count ~= "1" then
-			cell.title:SetText("由 ["..tostring(e.members[pubName]).."] 发布".."  X"..count.."件")
-		else
-			cell.title:SetText("由 ["..tostring(e.members[pubName]).."] 发布")
+		local cp = e.curPgIdx
+		if np < e.curPgIdx then
+			e.curPgIdx = np
+			cp = np
 		end
 
-        cell.auEdit:SetText("")
-        cell.info:SetText("")
-        cell.text:SetText("")
-        cell.auBtn:SetEnabled(true)
-        cell.auEdit:SetEnabled(true)
-        cell.auPBtn:SetEnabled(true)
+		e.baseUI.pageText:SetText(""..cp.."/"..np)
 
-        local tex = GetItemIcon(link)
-        local _, itemLink = GetItemInfo(link)
-        if tex then
-            cell.icon:SetTexture(tex)
-        else
-            cell.icon:SetTexture(nil)
-        end
+		e.baseUI.prevBtn:SetEnabled(cp ~= 1)
+		e.baseUI.nextBtn:SetEnabled(cp ~= np)
 
-        if itemLink then
-            cell.text:SetText(tostring(itemLink).." 起价"..tostring(stPrice))
-        end
+		local stId = (cp - 1) * 3 + 1
+		local t1, t2, t3
+		local c1 = e.baseUI.cell1
+		local c2 = e.baseUI.cell2
+		local c3 = e.baseUI.cell3
+		c1:Hide()
+		c2:Hide()
+		c3:Hide()
+		for i,t in pairs(e.sellings) do
+			local c = nil
+			local ed = nil
+			if i == stId then
+				c = c1
+			elseif (i - 1) == stId then
+				c = c2
+			elseif (i - 2) == stId then
+				c = c3
+				ed = 1
+			end
+			if c then
+				c.sid = t.sid
+				c.slink = t.lnk
+				c.scount = t.cnt
+				
+				if t.cnt ~= "1" then
+					c.title:SetText("由 ["..tostring(e.membs[t.pub]).."] 发布".."  X"..t.cnt.."件")
+				else
+					c.title:SetText("由 ["..tostring(e.membs[t.pub]).."] 发布")
+				end
 
-        if not cell:IsShown() then cell:Show() end
+				c.auEdit:SetText("")
+				c.info:SetText(t.inf)
+				
+				local isEn = true
+				if t.lck == 1 then isEn = false end
+				c.auBtn:SetEnabled(isEn)
+				c.auEdit:SetEnabled(isEn)
+				c.auPBtn:SetEnabled(isEn)
 
-        if UnitName("player") == pubName then
-            cell.ownClsBtn:Show()
-            cell.ownPauBtn:Show()
-        else
-            cell.ownClsBtn:Hide()
-            cell.ownPauBtn:Hide()
-        end
+				local tex = GetItemIcon(t.lnk)
+				local _, itemLink = GetItemInfo(t.lnk)
+				if tex then
+					c.icon:SetTexture(tex)
+				else
+					c.icon:SetTexture(nil)
+				end
+				if itemLink then
+					c.text:SetText(tostring(t.spr).."起 "..tostring(itemLink))
+				end
+
+				if not c:IsShown() then c:Show() end
+
+				if e.NM == t.pub then
+					c.clsBtn:Show()
+					c.pauBtn:Show()
+				else
+					c.clsBtn:Hide()
+					c.pauBtn:Hide()
+				end
+			end
+			if ed then
+				break
+			end
+		end
     end
 	
-	env.showSmall = function(e)
+	env.showmin = function(e)
 		if e.floatBase == nil then
 			local base = CreateFrame("Frame", nil, UIParent, BackdropTemplateMixin and "BackdropTemplate" or nil)
 			base.env = e
@@ -476,11 +544,11 @@ aura_env.init = function(env)
 			base.floatBtn:SetHeight(28)
 			base.floatBtn:SetText("还原")
 			base.floatBtn:SetPoint("LEFT", base, "RIGHT", -35, 0)
-			base.floatBtn.parent = base
+			base.floatBtn.par = base
 			base.floatBtn:SetScript("OnClick", function(self)
-					local p = self.parent
+					local p = self.par
 					p:Hide()
-					p.env.showBase(p.env)
+					p.env.showbs(p.env)
 				end)
 		else
 			e.floatBase:Show()
@@ -488,7 +556,7 @@ aura_env.init = function(env)
 		end
 	end
 	
-	env.showBase = function(e)
+	env.showbs = function(e)
 		if e.baseUI then
 			if e.baseUI then e.baseUI:Show() end
 			if e.floatBtn then e.floatBtn:Hide() end
@@ -498,7 +566,7 @@ aura_env.init = function(env)
 		local base = CreateFrame("Frame", nil, UIParent, BackdropTemplateMixin and "BackdropTemplate" or nil)
 		base.env = e
 		e.baseUI = base
-		base:SetSize(e.WID, 520)
+		base:SetSize(e.WID, 530)
 		base:SetPoint("Center", UIParent, 0, 50)
 		local title = base:CreateFontString(nil, "ARTWORK", "GameFontNormal")
         title:SetText("G团自动拍卖助手-by大川")
@@ -526,12 +594,12 @@ aura_env.init = function(env)
         sbtn:SetWidth(45)
         sbtn:SetHeight(30)
         sbtn:SetText("缩小")
-		sbtn:SetPoint("TOPRIGHT", base, -10, -4)
-        sbtn.parent = base
+		sbtn:SetPoint("TOPRIGHT", base, -8, -4)
+        sbtn.par = base
         sbtn:SetScript("OnClick", function(self)
-                local p = self.parent
+                local p = self.par
                 p:Hide()
-				p.env.showSmall(p.env)
+				p.env.showmin(p.env)
             end)
 		base.smallBtn = sbtn
 		
@@ -539,10 +607,12 @@ aura_env.init = function(env)
         nxt:SetWidth(30)
         nxt:SetHeight(30)
         nxt:SetText(">")
-		nxt:SetPoint("TOPRIGHT", base, -44, -4)
-        nxt.parent = base
+		nxt:SetPoint("TOPRIGHT", base, -52, -4)
+        nxt.par = base
         nxt:SetScript("OnClick", function(self)
-                local p = self.parent
+                local p = self.par
+				p.env.curPgIdx = p.env.curPgIdx + 1
+				p.env.refreshc(p.env)
             end)
 		nxt:SetEnabled(false)
 		base.nextBtn = nxt
@@ -550,27 +620,42 @@ aura_env.init = function(env)
 		local page = base:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
         page:SetWidth(30)
         page:SetHeight(30)
-        page:SetText(""..e.pageIndex)
-		page:SetPoint("TOPRIGHT", base, -70, -4)
+        page:SetText(""..e.curPgIdx)
+		page:SetPoint("TOPRIGHT", base, -83, -4)
 		base.pageText = page
 		
 		local prv = CreateFrame("Button", nil, base, "UIPanelButtonTemplate")
         prv:SetWidth(30)
         prv:SetHeight(30)
-        prv:SetText(">")
-		prv:SetPoint("TOPRIGHT", base, -100, -4)
-        prv.parent = base
+        prv:SetText("<")
+		prv:SetPoint("TOPRIGHT", base, -120, -4)
+        prv.par = base
         prv:SetScript("OnClick", function(self)
-                local p = self.parent
+                local p = self.par
+				p.env.curPgIdx = p.env.curPgIdx - 1
+				p.env.refreshc(p.env)
             end)
 		base.prevBtn = prv
 		prv:SetEnabled(false)
+		
+		local syn = CreateFrame("Button", nil, base, "UIPanelButtonTemplate")
+        syn:SetWidth(45)
+        syn:SetHeight(30)
+        syn:SetText("Syn")
+		syn:SetPoint("TOPRIGHT", base, -170, -4)
+        syn.par = base
+        syn:SetScript("OnClick", function(self)
+                local p = self.par
+				p.env.sync(e.env)
+            end)
+		syn:SetEnabled(true)
+		base.syncBtn = syn
 
 		base:Show()
 
-		base.cell1 = e.createCell(e, 1)
-		base.cell2 = e.createCell(e, 2)
-		base.cell3 = e.createCell(e, 3)
+		base.cell1 = e.createc(e, 1)
+		base.cell2 = e.createc(e, 2)
+		base.cell3 = e.createc(e, 3)
 		base.cell1:Hide()
 		base.cell2:Hide()
 		base.cell3:Hide()
