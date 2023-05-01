@@ -60,7 +60,7 @@ local receiveMainMsg = function(event, ...)
 	end
 end
 
---addon.registLaterInit(receiveMainMsg)
+--addon:registGlobalEvent(receiveMainMsg)
 
 -- addon.initAddonCategoryButton("按价格排序背包", "Sort", 80, 40, function()
 -- 	iterateAll()

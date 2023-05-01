@@ -1,12 +1,6 @@
 local _, addon = ...
-local notifyEvent   = addon.notifyEvent
 
 -----------------init codes---------------
-local INIT_ADDON = "init"
-local INIT_ADDON_LATER = "later"
-local INIT_ADDON_LATER_X2 = "later2"
-local INIT_ADDON_CREATE_CATEGORY = "createOpts"
-
 local GetTime = GetTime
 local DELAY_TIME, DELAY_TIME_X2 = 4, 8
 local lastEnterTime
@@ -15,6 +9,8 @@ local isLaterNotified = 0
 ----------------addon categories-----------------------------
 local categoryCurrentY = -10
 local categoryStartX = 10
+local tabInX = 35
+local offsetY = 22
 
 local function categoryFrameInit()
 	if addon.categoryFrame then return end
@@ -27,30 +23,37 @@ local function categoryFrameInit()
 	addon.categoryFrame:SetScrollChild(addon.categoryContent)
 	addon.categoryFrame:Hide()
 
-	local text = addon.categoryContent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-	text:SetPoint("TOPLEFT", check, "TOPRIGHT", 1, 0)
+	local text = addon.categoryContent:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 	text:SetPoint("TOPLEFT", addon.categoryContent, categoryStartX, categoryCurrentY)
 	text:SetJustifyH("LEFT")
 	text:SetText("需要重载界面的配置有*号")
-	categoryCurrentY = categoryCurrentY - 50
+	categoryCurrentY = categoryCurrentY - offsetY
 end
 
-local createCategoryLine = function()
+function addon:createCategoryLine()
+	-- local f = addon.categoryContent
+	-- local l = f:CreateLine(nil, "BACKGROUND")
+	-- l:SetThickness(2)
+	-- l:SetColorTexture(0.6, 0.5, 0.3, 1.0)
+	-- l:SetStartPoint("BOTTOMLEFT", categoryStartX, categoryCurrentY)
+	-- l:SetEndPoint("BOTTOMLEFT", categoryStartX + 500, categoryCurrentY)
+	-- categoryCurrentY = categoryCurrentY - 5
+
+	categoryCurrentY = categoryCurrentY - offsetY
+end
+
+function addon:initCategoryFont(title)
 	local f = addon.categoryContent
-	local l = f:CreateLine(nil, "BACKGROUND")
-	l:SetThickness(2)
-	l:SetColorTexture(0.6, 0.5, 0.3, 1.0)
-	l:SetStartPoint("BOTTOMLEFT", categoryStartX, categoryCurrentY)
-	l:SetEndPoint("BOTTOMLEFT", categoryStartX + 500, categoryCurrentY)
-	categoryCurrentY = categoryCurrentY - 5
-end
 
-addon.setButtonItemIcon = function(button, itemId)
-
+	local text = addon.categoryContent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+	text:SetPoint("TOPLEFT", addon.categoryContent, categoryStartX, categoryCurrentY)
+	text:SetJustifyH("LEFT")
+	text:SetText(title)
+	categoryCurrentY = categoryCurrentY - 20
 end
 
 -- 配置一个按钮到category里面
-addon.initCategoryButton = function(title, btnText, btnWidth, btnHeight, onClick)
+function addon:initCategoryButton(title, btnText, btnWidth, btnHeight, onClick)
 	local f = addon.categoryContent
 
 	local text = f:CreateFontString(nil,"OVERLAY","GameFontWhite")
@@ -58,7 +61,7 @@ addon.initCategoryButton = function(title, btnText, btnWidth, btnHeight, onClick
 	text:SetPoint("TOPLEFT", f, categoryStartX, categoryCurrentY)
 	text:SetJustifyH("LEFT")
 	text:SetText(title)
-	categoryCurrentY = categoryCurrentY - 25
+	categoryCurrentY = categoryCurrentY - offsetY
 
 	local b = CreateFrame("Button", nil, f, "GameMenuButtonTemplate")
     b:SetWidth(btnWidth)
@@ -67,13 +70,11 @@ addon.initCategoryButton = function(title, btnText, btnWidth, btnHeight, onClick
     b:SetText(btnText)
     b:SetScript("OnClick", onClick)
 	categoryCurrentY = categoryCurrentY - btnHeight - 10
-
-	createCategoryLine()
 end
 
 -- 配置一个checkBox里面
 -- @param changeCheckFun传入一个函数，改变当前的check；并返回新的check状态
-addon.initCategoryCheckBox = function(title, initChecked, changeCheckFun)
+function addon:initCategoryCheckBox(title, initChecked, changeCheckFun)
     local f = addon.categoryContent
 
     local checkBox = CreateFrame("CheckButton", nil, f, "OptionsCheckButtonTemplate")
@@ -90,21 +91,29 @@ addon.initCategoryCheckBox = function(title, initChecked, changeCheckFun)
 	checkBox:SetScript("OnClick", function(box)
 		changeCheckFun(box)
 	end)
-
-	createCategoryLine()
 end
 
-addon.initCategoryCheckBoxes = function(title, checks)
+function addon:initCategoryCheckBoxes(title, checks, isTabIn) -- checks = {{name=, checked=, func=}, {...}}
 	local f = addon.categoryContent
 
-	local text = f:CreateFontString(nil,"OVERLAY","GameFontNormal")
-	text:SetPoint("TOPLEFT", check, "TOPRIGHT", 1, 0)
-	text:SetPoint("TOPLEFT", f, categoryStartX, categoryCurrentY)
-	text:SetJustifyH("LEFT")
-	text:SetText(title)
-	categoryCurrentY = categoryCurrentY - 25
 	local curX = categoryStartX
+	if isTabIn then
+		curX = curX + tabInX
+	end
+
+	if title then
+		local text = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+		text:SetPoint("TOPLEFT", check, "TOPRIGHT", 1, 0)
+		text:SetPoint("TOPLEFT", f, categoryStartX, categoryCurrentY)
+		text:SetJustifyH("LEFT")
+		text:SetText(title)
+		categoryCurrentY = categoryCurrentY - offsetY
+	end
+
+	local checkBoxes = {}
+	local checkBoxesCount = 0
 	for i, v in pairs(checks) do 
+		checkBoxesCount = checkBoxesCount + 1
 		local checkBox = CreateFrame("CheckButton", nil, f, "OptionsCheckButtonTemplate")
 		checkBox:SetPoint("TOPLEFT", curX, categoryCurrentY)
 		checkBox:SetSize(24, 24)
@@ -115,11 +124,13 @@ addon.initCategoryCheckBoxes = function(title, checks)
 		checkBox:SetChecked(v.checked)
 		checkBox:SetScript("OnClick", v.func)
 		curX = curX + checkBox.msg:GetWidth() + checkBox:GetWidth() + 10
+
+		checkBoxes[checkBoxesCount] = checkBox
 	end
 	
 	categoryCurrentY = categoryCurrentY - 24 - 10
 
-	createCategoryLine()
+	return checkBoxes
 end
 
 local function categoriesUi()
@@ -134,34 +145,47 @@ local function categoriesUi()
     InterfaceOptions_AddCategory(f)
 end
 
+function addon:notifyEvent(event, ...)
+    for _, v in pairs(addon.modFuncs) do
+        if v then v(event, ...) end
+	end
+end
+
 local function OnTimerUpdate()
     local cur = GetTime()
-    if isLaterNotified == 0 and (cur - lastEnterTime) >= DELAY_TIME then
+    if isLaterNotified == 0 and (cur - lastEnterTime) >= 2 then
         isLaterNotified = 1
-        notifyEvent(INIT_ADDON_LATER)
+        categoriesUi()
+        addon:notifyEvent("later")
 		return
     end
 
-    if isLaterNotified == 1 and (cur - lastEnterTime) >= DELAY_TIME_X2 then
+    if isLaterNotified == 1 and (cur - lastEnterTime) >= 4 then
         isLaterNotified = 2
-        categoriesUi()
-        notifyEvent(INIT_ADDON_LATER_X2)
+        addon:notifyEvent("later2")
+		return
+    end
+
+	if isLaterNotified == 1 and (cur - lastEnterTime) >= 6 then
+        isLaterNotified = 2
+        addon:notifyEvent("later3")
         addon.eventframe:SetScript("OnUpdate", nil)
     end
 end
 
-function addon.OnEvent(frame, event, ...)
+local onEvent = function(frame, event, ...)
 	if event == 'LOADING_SCREEN_DISABLED' then
+		--ok print("loaded "..tostring(MiscDB))
 		lastEnterTime = GetTime()
 
-		notifyEvent(INIT_ADDON)
+		addon:notifyEvent(INIT_ADDON)
 
 		addon.eventframe:SetScript("OnUpdate", OnTimerUpdate)
 		addon.eventframe:UnregisterEvent("LOADING_SCREEN_DISABLED")
     else
-        notifyEvent(event, ...)
+        addon:notifyEvent(event, ...)
     end
 end
 
-addon.eventframe:SetScript('OnEvent', addon.OnEvent)
+addon.eventframe:SetScript('OnEvent', onEvent)
 addon.eventframe:RegisterEvent("LOADING_SCREEN_DISABLED")

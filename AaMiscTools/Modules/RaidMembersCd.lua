@@ -256,8 +256,7 @@ local receiveMainMsg = function(event, ...)
         frame:RegisterEvent("GROUP_ROSTER_UPDATE")
         frame:RegisterEvent("ENCOUNTER_START") -- 不做监听boss战结束；因为我想看看谁没用技能
 		updateTeamTab()
-	elseif event == "later2" then
 	end
 end
 
-addon.registLaterInit(receiveMainMsg)
+addon:registGlobalEvent(receiveMainMsg)

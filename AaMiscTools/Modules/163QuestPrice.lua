@@ -1,26 +1,6 @@
 --163里面爬的：做任务显示任务装备的金币, 并且我追加了装等显示
 local _, addon = ...
 
-addon.registCategoryCreator(function()
-    local checks = {
-    }
-    checks[1] = {}
-    checks[2] = {}
-    
-    checks[1].name = "物品类型"
-    checks[1].checked = MiscDB.showQuestItemSubType
-    checks[1].func = function()
-        MiscDB.showQuestItemSubType = not MiscDB.showQuestItemSubType
-    end
-
-    checks[2].name = "物品等级"
-    checks[2].checked = MiscDB.showQuestItemLevel
-    checks[2].func = function()
-        MiscDB.showQuestItemLevel = not MiscDB.showQuestItemLevel
-    end
-	addon.initCategoryCheckBoxes("显示任务信息", checks)
-end)
-
 --字
 local typeTexts = {
     ["INVTYPE_NECK"] = "项",
@@ -52,7 +32,7 @@ local CLASS_AMOR_TYPE = {
     ["PALADIN"]     = '板',
     ["DEATHKNIGHT"] = '板',
 }
-local player_class = select(2, UnitClass'player')
+local player_class = select(2, UnitClass('player'))
 ------------------------------------------------------------
 -- QuestPrice.lua
 --
@@ -67,12 +47,11 @@ local GetItemInfo = GetItemInfo
 local MoneyFrame_SetType = MoneyFrame_SetType
 local MoneyFrame_Update = MoneyFrame_Update
 local GetDetailedItemLevelInfo = GetDetailedItemLevelInfo
-
-local EventFrame = CreateFrame("Frame")
-EventFrame:RegisterEvent("QUEST_COMPLETE")
+local getCfg = addon.getCfg
+local setCfg = addon.setCfg
 
 local function SetLevelText(link, button)
-    local showQuestItemLevel = MiscDB.showQuestItemLevel
+    local showQuestItemLevel = getCfg("showQuestItemLevel")
     if showQuestItemLevel then
         local itemLevel = link and GetDetailedItemLevelInfo(link)
         if itemLevel and itemLevel > 1 then
@@ -83,7 +62,7 @@ end
 
 local function SetTypeText(link, button)
     local subTypeText = button.subTypeText
-    local showQuestItemSubType = MiscDB.showQuestItemSubType
+    local showQuestItemSubType = getCfg("showQuestItemSubType")
     if link then
         local class, subclass, _, slot = select(6, GetItemInfo(link))
         if class=="护甲" and subclass and slot~="INVTYPE_CLOAK" then
@@ -108,6 +87,9 @@ local function SetTypeText(link, button)
     end
     subTypeText:SetText("")
 end
+
+local EventFrame = CreateFrame("Frame")
+EventFrame:RegisterEvent("QUEST_COMPLETE")
 
 function EventFrame:QUEST_COMPLETE()
     if QuestFrame:IsVisible() then
@@ -174,16 +156,48 @@ local function CreatePriceFrame(name)
     end
 end
 
---6.0是后创建的按钮
-hooksecurefunc("QuestInfo_GetRewardButton", function(rewardsFrame, index)
-    local showQuestItemSubType = MiscDB.showQuestItemSubType
-    local showQuestItemLevel = MiscDB.showQuestItemLevel
+local function initSelf()
+    local showQuestItemSubType = getCfg("showQuestItemSubType")
+    local showQuestItemLevel = getCfg("showQuestItemLevel")
     if showQuestItemLevel == false and showQuestItemSubType == false then
         return
     end
 
-    local rewardButtons = rewardsFrame == QuestInfoRewardsFrame and rewardsFrame.RewardButtons or nil; --or MapQuestInfoRewardsFrame, but we don't create text on those.
-    if ( rewardButtons and rewardButtons[index] and not rewardButtons[index].subTypeText) then
-        CreatePriceFrame(rewardButtons[index]:GetName()) --"QuestInfoRewardsFrameQuestInfoItem"..index
+    --6.0是后创建的按钮
+    hooksecurefunc("QuestInfo_GetRewardButton", function(rewardsFrame, index)
+        local rewardButtons = rewardsFrame == QuestInfoRewardsFrame and rewardsFrame.RewardButtons or nil; --or MapQuestInfoRewardsFrame, but we don't create text on those.
+        if (rewardButtons and rewardButtons[index] and not rewardButtons[index].subTypeText) then
+            CreatePriceFrame(rewardButtons[index]:GetName()) --"QuestInfoRewardsFrameQuestInfoItem"..index
+        end
+    end)
+end
+
+local receiveMainMsg = function(event, ...)
+    if event == "later" then
+        initSelf()
+        addon:unRegistGlobalEvent(receiveMainMsg)
     end
+end
+addon:registGlobalEvent(receiveMainMsg)
+
+addon:registCategoryCreator(function()
+    local checks = {
+        {
+            name = "显示任务物品类型",
+            checked = getCfg("showQuestItemSubType"),
+            func = function()
+                local c = not getCfg("showQuestItemSubType")
+                setCfg("showQuestItemSubType", c)
+            end
+        },
+        {
+            name = "显示任务物品等级",
+            checked = getCfg("showQuestItemLevel"),
+            func = function()
+                local c = not getCfg("showQuestItemLevel")
+                setCfg("showQuestItemLevel", c)
+            end
+        }
+    }
+	addon:initCategoryCheckBoxes(nil, checks)
 end)
