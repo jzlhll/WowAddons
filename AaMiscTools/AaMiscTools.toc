@@ -12,8 +12,10 @@ InitAtBefore.lua
 Modules/163QuestPrice.lua
 Modules/iColor.lua
 Modules/AutoLoads.lua
-Modules/BagActions.lua
+
 Modules/BagButtons.lua
+Modules/BagActions.lua
+
 Modules/RaidMembersCd.lua
 
 InitAtLast.lua

@@ -27,7 +27,6 @@ local function iterateAll()
 				_, _, _, _, _, _, _, _, _, _, price = GetItemInfo(itemLink)
 				local cInfo = GetContainerItemInfo(BagID, BagSlot)
 				local count = cInfo.stackCount
-				print(itemLink..", "..count..", "..tostring(price))
 				local currentPrices = price*count
 				if minPrices == nil or minestPrices > currentPrices then
 					minPrices = currentPrices

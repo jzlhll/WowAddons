@@ -10,6 +10,9 @@ local strsub = string.sub
 local showBagGreenZhubao, showBagItemLevel, showBagTrade
 
 addon.allHasLevelItems = {}
+
+local BagButtons = addon.BagButtons
+
 -- 背包是0-4，银行是-1，然后5,6,7,8，9,10,11
 function addon:printAllHasLevelItems()
     local count = 0
@@ -57,9 +60,11 @@ local function UpdateExtraText(f)
 	local itemLink = f:GetItem()
     local text = nil
 
-    local saveIn = nil
-
 	if itemLink then
+        local saveIn = nil
+        local slot = f:GetID()
+        local bag = f.bag
+
 		local itemId, _, _, _, _, type = GetItemInfoInstant(itemLink)
         -- 是珠宝绿色石头
         if showBagGreenZhubao and isZhubaoFile(itemId) then
@@ -73,27 +78,23 @@ local function UpdateExtraText(f)
         if showBagItemLevel then
             if type == 2 or type == 4 then
                 text = GetDetailedItemLevelInfo(itemLink)
-                local slot = f:GetID()
-                local bag = f.bag
-                local isBank = Bagnon.IsBank(bag)
-                --print("saveIn "..tostring(f).." slot "..slot.." bag "..bag.." isBank "..tostring(isBank))
+                --local isBank = Bagnon.IsBank(bag)
+                -- -1,5,6,7,8,9,10,11都是银行。所以与背包0-4不冲突。
                 addon.allHasLevelItems[bag] = addon.allHasLevelItems[bag] or {}
                 addon.allHasLevelItems[bag][slot] = f
                 saveIn = true
             end
         end
+        
+        if saveIn == nil then
+            local items = addon.allHasLevelItems[bag]
+            if items and items[slot] then
+                items[slot] = nil
+            end
+        end
 	end
 
-    if saveIn == nil then
-        local slot = f:GetID()
-        local bag = f.bag
-        local items = addon.allHasLevelItems[bag]
-        if items and items[slot] then
-            --print("remove "..tostring(f).." slot "..slot.." bag "..bag)
-            items[slot] = nil
-        end
-    end
-
+    f.miscToolBagExtraText:SetFont(STANDARD_TEXT_FONT, 13, 'OUTLINE')
     f.miscToolBagExtraText:SetText(text)
 end
 
@@ -109,12 +110,17 @@ addon:registCategoryCreator(function()
 		local c = not getCfg("showBagItemLevel")
         setCfg("showBagItemLevel", c)
 	end)
+
+    addon:initCategoryCheckBox("显示可交易物品*", getCfg("showBagTrade"), function(cb)
+		local c = not getCfg("showBagTrade")
+        setCfg("showBagTrade", c)
+	end)
 end)
 
 local receiveMainMsg = function(event, ...)
     if event == "later2" then
         initCfg()
-
+        BagButtons:Init()
         if showBagGreenZhubao or showBagItemLevel or showBagTrade then
             if IsAddOnLoaded("Bagnon") then
                 hooksecurefunc(Bagnon.Item, "Update", function(self)

@@ -10,14 +10,29 @@ local GetContainerNumSlots = GetContainerNumSlots or C_Container.GetContainerNum
 
 local strsub = string.sub
 
-local showBagTrade, showBagItemLevel
+local showBagTrade
+
+local bagnonListMenuButtons
+local bagnonMenuBtns
+local bagnonCreateButtonFunc
+
+local combuctorFrameNew
+
+addon.BagButtons = {}
+local BagButtons = addon.BagButtons
 
 local function initCfg()
     showBagTrade = getCfg("showBagTrade")
-    showBagItemLevel = getCfg("showBagItemLevel")
 end
 
 local tip, processedMatcher, allTradeEquipsList
+
+local function timeMatch(showText)
+    --中文
+    local hours = strgmatch(showText,"(%w+)小时")()  or "0"
+    local minutes = strgmatch(showText,"(%w+)分钟")() or "0"
+    return hours, minutes
+end
 
 local initDTooltip = function()
     tip = CreateFrame("GAMETOOLTIP", "AaMiscToolTip", nil, "GameTooltipTemplate")
@@ -33,17 +48,6 @@ local initDTooltip = function()
     allTradeEquipsList = {}
 end
 
---更新一件装备可交易
-local updateCanTradeEquip = function(itemId, bagId, slotId)
-    allTradeEquipsList[itemId] = {
-    }
-end
-
---到期一件装备
-local removeCanTradeEquip = function(itemId)
-    allTradeEquipsList[itemId] = nil
-end
-
 local checkAnItem = function(itemLink, bag, slot)
     tip:ClearLines()
     tip:SetBagItem(bag, slot)
@@ -56,10 +60,8 @@ local checkAnItem = function(itemLink, bag, slot)
                 if showText then
                     -- check time
                     -- todo: global formatter replace
-                    local hours = strgmatch(showText,"(%w+)小时")()  or "0"
-                    local minutes = strgmatch(showText,"(%w+)分钟")() or "0"
-
-                    return "易"..hours..":"..minutes
+                    local hours, minutes = timeMatch(showText)
+                    return "剩余\n"..hours..":"..minutes
                 end
             end
         end
@@ -68,7 +70,7 @@ local checkAnItem = function(itemLink, bag, slot)
     return nil
 end
 
-local checkAllBags = function()
+function BagButtons:CheckAllBags()
     --addon:printTab(Bagnon, 1, 1)
     --addon:printAllHasLevelItems()
     local canTradeWords
@@ -79,12 +81,12 @@ local checkAllBags = function()
             local link = GetContainerItemLink(bag, slot)
             if (link ~= nil and IsEquippableItem(link)) then
                 canTradeWords = checkAnItem(link, bag, slot)
-                --print("canTradeWords "..tostring(canTradeWords).." bag "..bag.." slot "..slot)
                 if canTradeWords then
                     f = addon.allHasLevelItems[bag][slot]
                     fontStr = f.miscToolBagExtraText
                     if fontStr then
                         lvl = GetDetailedItemLevelInfo(link)
+                        fontStr:SetFont(STANDARD_TEXT_FONT, 11, 'OUTLINE')
                         fontStr:SetText(lvl.."\n"..canTradeWords)
                     end
                 end
@@ -93,17 +95,6 @@ local checkAllBags = function()
     end
 end
 
-addon:registCategoryCreator(function()
-    addon:initCategoryCheckBox("显示可交易物品*", getCfg("showBagTrade"), function(cb)
-		local c = not getCfg("showBagTrade")
-        setCfg("showBagTrade", c)
-	end)
-end)
-
-local bagnonListMenuButtons
-local bagnonMenuBtns
-local bagnonCreateButtonFunc
-
 local initBagnon = function()
     bagnonListMenuButtons = Bagnon.Frame.ListMenuButtons
     bagnonMenuBtns = {}
@@ -111,7 +102,7 @@ local initBagnon = function()
         local button = CreateFrame('Button', nil, frame, 'UIPanelButtonTemplate')
         button:SetText("可易")
         button:SetScript("OnClick", function(self)
-            checkAllBags()
+            BagButtons:CheckAllBags()
         end)
         button:SetWidth(36)
         button:SetHeight(22)
@@ -128,7 +119,6 @@ local initBagnon = function()
     end
 end
 
-local combuctorFrameNew
 local initCombuctor = function()
     combuctorFrameNew = Combuctor.Frame.New
 
@@ -138,7 +128,7 @@ local initCombuctor = function()
         local button = CreateFrame('Button', nil, f, 'CombuctorBagToggleTemplate')
         button:SetText("可易")
         button:SetScript("OnClick", function(self)
-            checkAllBags()
+            BagButtons:CheckAllBags()
         end)
 
         button:SetPoint('RIGHT', f.bagToggle, 'LEFT', 200, 0)
@@ -147,24 +137,18 @@ local initCombuctor = function()
     end
 end
 
-local receiveMainMsg = function(event, ...)
-    if event == "later2" then
-        initCfg()
+function BagButtons:Init()
+    initCfg()
 
-        if showBagTrade then
-            if IsAddOnLoaded("Bagnon") then
-                initDTooltip()
-                initBagnon()
-            end
-
-            if IsAddOnLoaded("Combuctor") then
-                initDTooltip()
-                initCombuctor()
-            end
+    if showBagTrade then
+        if IsAddOnLoaded("Bagnon") then
+            initDTooltip()
+            initBagnon()
         end
 
-        addon:unRegistGlobalEvent(receiveMainMsg)
+        if IsAddOnLoaded("Combuctor") then
+            initDTooltip()
+            initCombuctor()
+        end
     end
 end
-
-addon:registGlobalEvent(receiveMainMsg)
