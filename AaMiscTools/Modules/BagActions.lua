@@ -79,7 +79,6 @@ local function UpdateExtraText(f)
         if showBagItemLevel then
             if type == 2 or type == 4 then
                 text = GetDetailedItemLevelInfo(itemLink)
-                --local isBank = Bagnon.IsBank(bag)
                 -- -1,5,6,7,8,9,10,11都是银行。所以与背包0-4不冲突。
                 addon.allHasLevelItems[bag] = addon.allHasLevelItems[bag] or {}
                 addon.allHasLevelItems[bag][slot] = f
@@ -98,7 +97,7 @@ local function UpdateExtraText(f)
     f.miscToolBagExtraText:SetFont(STANDARD_TEXT_FONT, 13, 'OUTLINE')
     f.miscToolBagExtraText:SetText(text)
 
-    BagButtons:ResetTimer()
+    BagButtons:ResetCheckAllBagsTimer()
     addon.isHasUpdateExtraText = true
 end
 
@@ -137,7 +136,7 @@ local receiveMainMsg = function(event, ...)
                 hooksecurefunc(Combuctor.Item, "Update", function(self)
                     CreateExtraText(self)
                     UpdateExtraText(self)
-                end);
+                end)
             end
         end
 
