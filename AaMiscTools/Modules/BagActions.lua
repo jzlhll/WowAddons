@@ -9,21 +9,7 @@ local strsub = string.sub
 
 local showBagGreenZhubao, showBagItemLevel, showBagTrade
 
-addon.allHasLevelItems = {}
-addon.isHasUpdateExtraText = false
-
 local BagButtons = addon.BagButtons
-
--- 背包是0-4，银行是-1，然后5,6,7,8，9,10,11
-function addon:printAllHasLevelItems()
-    local count = 0
-    for _,v in pairs(addon.allHasLevelItems) do
-        for _, v2 in pairs (v) do
-            if v2 then count = count + 1 end
-        end
-    end
-    print("count="..count)
-end
 
 local initCfg = function()
     showBagGreenZhubao = getCfg("showBagGreenZhubao")
@@ -52,20 +38,16 @@ end
 local function CreateExtraText(f)
 	if f.miscToolBagExtraText == nil then
 		f.miscToolBagExtraText = f:CreateFontString(nil, 'OVERLAY');
-		f.miscToolBagExtraText:SetPoint('TOPLEFT', f, 'TOPLEFT', 1, -1);
+		f.miscToolBagExtraText:SetPoint('TOPLEFT', f, 'TOPLEFT', -2, -1);
 		f.miscToolBagExtraText:SetFont(STANDARD_TEXT_FONT, 13, 'OUTLINE');
 	end
 end
 
 local function UpdateExtraText(f)
-	local itemLink = f:GetItem()
+	local itemLink = f:GetInfo().link --两个插件兼容处理 f:GetItem()
     local text = nil
 
 	if itemLink then
-        local saveIn = nil
-        local slot = f:GetID()
-        local bag = f.bag
-
 		local itemId, _, _, _, _, type = GetItemInfoInstant(itemLink)
         -- 是珠宝绿色石头
         if showBagGreenZhubao and isZhubaoFile(itemId) then
@@ -79,27 +61,17 @@ local function UpdateExtraText(f)
         if showBagItemLevel then
             if type == 2 or type == 4 then
                 text = GetDetailedItemLevelInfo(itemLink)
-                --local isBank = Bagnon.IsBank(bag)
-                -- -1,5,6,7,8,9,10,11都是银行。所以与背包0-4不冲突。
-                addon.allHasLevelItems[bag] = addon.allHasLevelItems[bag] or {}
-                addon.allHasLevelItems[bag][slot] = f
-                saveIn = true
-            end
-        end
-        
-        if saveIn == nil then
-            local items = addon.allHasLevelItems[bag]
-            if items and items[slot] then
-                items[slot] = nil
             end
         end
 	end
 
-    f.miscToolBagExtraText:SetFont(STANDARD_TEXT_FONT, 13, 'OUTLINE')
+    f.miscToolBagExtraText:SetVertexColor(1.0, 1.0, 1.0, 1.0)
     f.miscToolBagExtraText:SetText(text)
 
-    BagButtons:ResetTimer()
-    addon.isHasUpdateExtraText = true
+    if showBagTrade then
+        BagButtons:RecordBagList(f)
+        BagButtons:ResetTimer()
+    end
 end
 
 addon:registCategoryCreator(function()
@@ -124,7 +96,11 @@ end)
 local receiveMainMsg = function(event, ...)
     if event == "later2" then
         initCfg()
-        BagButtons:Init()
+
+        if showBagTrade then
+            BagButtons:Init()
+        end
+
         if showBagGreenZhubao or showBagItemLevel or showBagTrade then
             if IsAddOnLoaded("Bagnon") then
                 hooksecurefunc(Bagnon.Item, "Update", function(self)

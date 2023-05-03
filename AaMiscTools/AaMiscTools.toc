@@ -9,6 +9,8 @@ Cfg.lua
 
 InitAtBefore.lua
 
+Modules/Units/TooltipTextUtil.lua
+
 Modules/163QuestPrice.lua
 Modules/iColor.lua
 Modules/AutoLoads.lua

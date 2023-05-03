@@ -217,7 +217,9 @@ end
 local function updateTeamTab()
     for i = 1, GetNumGroupMembers() do
         local name, _, _, _, _, class = GetRaidRosterInfo(i)
-        teamTab[name] = class
+	if name then
+            teamTab[name] = class
+	end
     end
 
 	if debug then
