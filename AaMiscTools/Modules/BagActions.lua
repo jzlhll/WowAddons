@@ -10,6 +10,7 @@ local strsub = string.sub
 local showBagGreenZhubao, showBagItemLevel, showBagTrade
 
 addon.allHasLevelItems = {}
+addon.isHasUpdateExtraText = false
 
 local BagButtons = addon.BagButtons
 
@@ -96,6 +97,9 @@ local function UpdateExtraText(f)
 
     f.miscToolBagExtraText:SetFont(STANDARD_TEXT_FONT, 13, 'OUTLINE')
     f.miscToolBagExtraText:SetText(text)
+
+    BagButtons:ResetTimer()
+    addon.isHasUpdateExtraText = true
 end
 
 addon:registCategoryCreator(function()

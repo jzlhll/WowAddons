@@ -12,7 +12,7 @@ local strsub = string.sub
 
 local showBagTrade
 
-local bagnonListMenuButtons
+local bagnonListMenuButtons, bagnonFrameLayout
 local bagnonMenuBtns
 local bagnonCreateButtonFunc
 
@@ -22,7 +22,7 @@ addon.BagButtons = {}
 local BagButtons = addon.BagButtons
 
 local function initCfg()
-    showBagTrade = getCfg("showBagTrade")
+    showBagTrade = showBagTrade or getCfg("showBagTrade")
 end
 
 local tip, processedMatcher, allTradeEquipsList
@@ -97,6 +97,7 @@ end
 
 local initBagnon = function()
     bagnonListMenuButtons = Bagnon.Frame.ListMenuButtons
+    bagnonFrameLayout     = Bagnon.Frame.Layout
     bagnonMenuBtns = {}
     bagnonCreateButtonFunc = function(frame, isBank)
         local button = CreateFrame('Button', nil, frame, 'UIPanelButtonTemplate')
@@ -116,6 +117,11 @@ local initBagnon = function()
         if frameId == 'inventory' or frameId == 'bank' then
             tinsert(self.menuButtons, bagnonMenuBtns[self] or bagnonCreateButtonFunc(self, frameId == 'bank'))
         end
+    end
+
+    function Bagnon.Frame:Layout()
+        bagnonFrameLayout(self)
+        BagButtons:ResetTimer(true)
     end
 end
 
@@ -150,5 +156,29 @@ function BagButtons:Init()
             initDTooltip()
             initCombuctor()
         end
+    end
+end
+
+local timerTick
+
+local function UpdateTicker()
+    BagButtons:CheckAllBags()
+    BagButtons:CancelTimer()
+end
+
+function BagButtons:ResetTimer(imditely)
+    BagButtons:CancelTimer()
+
+    if imditely and addon.isHasUpdateExtraText then
+        BagButtons:CheckAllBags()
+    end
+
+    timerTick = C_Timer.NewTicker(3, UpdateTicker)
+end
+
+function BagButtons:CancelTimer()
+    if timerTick then
+        timerTick:Cancel()
+        timerTick = nil
     end
 end
