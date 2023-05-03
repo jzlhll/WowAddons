@@ -13,7 +13,7 @@ Modules/163QuestPrice.lua
 Modules/iColor.lua
 Modules/AutoLoads.lua
 
-Modules/Units/BagButtonCanTrade.lua
+Modules/BagButtons.lua
 Modules/BagActions.lua
 
 Modules/RaidMembersCd.lua
