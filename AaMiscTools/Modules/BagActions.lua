@@ -9,7 +9,7 @@ local strsub = string.sub
 
 local showBagGreenZhubao, showBagItemLevel, showBagTrade
 
-local BagButtons = addon.BagButtons
+local TD = addon.BagCanTrade
 
 local initCfg = function()
     showBagGreenZhubao = getCfg("showBagGreenZhubao")
@@ -69,8 +69,9 @@ local function UpdateExtraText(f)
     f.miscToolBagExtraText:SetText(text)
 
     if showBagTrade then
-        BagButtons:RecordBagList(f)
-        BagButtons:ResetTimer()
+        --print("Update,,,"..tostring(GetTime()))
+        TD:RecordBagList(f)
+        TD:ResetTimer()
     end
 end
 
@@ -98,7 +99,7 @@ local receiveMainMsg = function(event, ...)
         initCfg()
 
         if showBagTrade then
-            BagButtons:Init()
+            TD:Init()
         end
 
         if showBagGreenZhubao or showBagItemLevel or showBagTrade then
