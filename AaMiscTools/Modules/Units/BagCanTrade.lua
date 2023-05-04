@@ -1,23 +1,15 @@
 -----当打开背包的时候，自动计算当前剩余时间，todo 更好的实时更新没有实现，缺乏知道bag关闭的事件。
 
 local _, addon = ...
-local getCfg = addon.getCfg
-local setCfg = addon.setCfg
 
-local strgmatch = string.gmatch
-local GetItemInfoInstant = GetItemInfoInstant;
+local strsub, strgmatch        = string.sub, string.gmatch
+local GetItemInfoInstant       = GetItemInfoInstant;
 local GetDetailedItemLevelInfo = GetDetailedItemLevelInfo;
-local GetContainerItemLink = GetContainerItemLink or C_Container.GetContainerItemLink
-local GetContainerNumSlots = GetContainerNumSlots or C_Container.GetContainerNumSlots
-
-local strsub = string.sub
-
-local bagnonFrameLayout
+local GetContainerItemLink     = GetContainerItemLink or C_Container.GetContainerItemLink
+local GetContainerNumSlots     = GetContainerNumSlots or C_Container.GetContainerNumSlots
 
 addon.BagCanTrade = {}
 local TD = addon.BagCanTrade 
-
-local tip, processedMatcher, allTradeEquipsList
 
 local function timeMatch(showText)
     --中文
@@ -28,7 +20,8 @@ local function timeMatch(showText)
 end
 
 local initDTooltip = function()
-    tip = CreateFrame("GAMETOOLTIP", "AaMiscToolTip", nil, "GameTooltipTemplate")
+    TD.tip = CreateFrame("GAMETOOLTIP", "AaMiscToolTip", nil, "GameTooltipTemplate")
+    local tip = TD.tip
     local L = tip:CreateFontString()
     local R = tip:CreateFontString()
     L:SetFontObject(GameFontNormal)
@@ -37,12 +30,11 @@ local initDTooltip = function()
     tip:SetScript("OnTooltipAddMoney", nil) --直接移除， 可以解决一个报错问题
     tip:SetOwner(WorldFrame, "ANCHOR_NONE")
     
-    processedMatcher = string.gsub(BIND_TRADE_TIME_REMAINING,"%%s","(.-)")
-    
-    allTradeEquipsList = {}
+    tip.processedMatcher = string.gsub(BIND_TRADE_TIME_REMAINING,"%%s","(.-)")
 end
 
 local checkAnItem = function(itemLink, bag, slot)
+    local tip = TD.tip
     tip:ClearLines()
     tip:SetBagItem(bag, slot)
     local text, showText
@@ -53,7 +45,7 @@ local checkAnItem = function(itemLink, bag, slot)
                 return "装绑"
             end
 
-            showText = strgmatch(text, processedMatcher)()
+            showText = strgmatch(text, tip.processedMatcher)()
             if showText then
                 -- check time
                 -- todo: global formatter replace
@@ -71,7 +63,7 @@ local checkAnItem = function(itemLink, bag, slot)
 end
 
 -- 背包是0-4，银行是-1，然后5,6,7,8，9,10,11
-function addon:printAllHasLevelItems()
+function TD:printAllHasLevelItems()
     local count = 0
     for _,v in pairs(addon.allBagSlotsItems) do
         for _, v2 in pairs (v) do
@@ -96,7 +88,7 @@ end
 function TD:CheckAllBags()
     if not addon.isHasUpdateExtraText then return end
     --addon:printTab(Bagnon, 1, 1)
-    --addon:printAllHasLevelItems()
+    --self:printAllHasLevelItems()
     local canTradeWords
     local f, fontStr, lvl, link, bags, slots
     for bag = 0, NUM_BAG_SLOTS do
@@ -126,7 +118,7 @@ end
 
 local initBagnon = function()
     -- TD.bagnonListMenuButtons = Bagnon.Frame.ListMenuButtons
-    -- bagnonFrameLayout     = Bagnon.Frame.Layout
+    -- TD.bagnonFrameLayout     = Bagnon.Frame.Layout
     -- TD.bagnonMenuBtns = {}
     -- TD.bagnonCreateButtonFunc = function(frame, isBank)
     --     local button = CreateFrame('Button', nil, frame, 'UIPanelButtonTemplate')
@@ -150,7 +142,7 @@ local initBagnon = function()
     -- todo 对比来看，每次一打开就自动Update，不需要hook这里
     -- function Bagnon.Frame:Layout()
     --     print("layout...")
-    --     bagnonFrameLayout(self)
+    --     TD.bagnonFrameLayout(self)
     --     TD:ResetTimer(true)
     -- end
 end
@@ -174,7 +166,7 @@ local initCombuctor = function()
     -- todo 对比来看，每次一打开就自动Update，不需要hook这里
     -- function Combuctor.Frame:Layout()
     --     print("layout...")
-    --     bagnonFrameLayout(self)
+    --     TD.bagnonFrameLayout(self)
     --     TD:ResetTimer(true)
     -- end
 end

@@ -3,7 +3,7 @@ local _, addon = ...
 
 local buttonFrame
 local function initButtonFrame()
-	print("11")
+	if buttonFrame then return end
 	local b = CreateFrame("Button", nil, UIParent, "GameMenuButtonTemplate")
 	b:SetWidth(120)
 	b:SetHeight(40)
@@ -13,18 +13,22 @@ local function initButtonFrame()
 	end)
 	b:SetPoint("LEFT", AuctionFrame, "RIGHT", 1, -50)
 	buttonFrame = b
-	print("22")
 end
 
 local receiveMainMsg = function(event, ...)
+	if event == "AUCTION_HOUSE_SHOW" then
+		initButtonFrame()
+		return
+	elseif event == "AUCTION_HOUSE_CLOSED" then
+		buttonFrame:Hide()
+		return
+	end
+
 	if event == "later" then
 		addon.eventframe:RegisterEvent("AUCTION_HOUSE_SHOW")
 		addon.eventframe:RegisterEvent("AUCTION_HOUSE_CLOSED")
-	end
-	if event == "AUCTION_HOUSE_SHOW" then
-		initButtonFrame()
-	elseif event == "AUCTION_HOUSE_CLOSED" then
-		buttonFrame:Hide()
+
+		addon.UnregisterEvent(receiveMainMsg)
 	end
 end
 
