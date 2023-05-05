@@ -34,6 +34,9 @@ local defaultCfg = {
 	--[默认加载后，自动隐藏任务栏]
 	["autoHideQuestWatchFrame"] = false,
 	["observePvpDialog"] = true,
+
+	--扫描AH
+	["scanAH"] = true,
 }
 
 -- 在初始化完成后，检查

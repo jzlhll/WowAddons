@@ -29,29 +29,3 @@ function addon:unRegistGlobalEvent(func)
 		end
 	end
 end
-
-local key = ""
-function addon:printTab(table, level, maxLvl)
-	local indent = ""
-	for i = 1, level do
-	indent = indent.."  "
-	end
-
-	if key ~= "" then
-	print(indent..key.." ".."=".." ".."{")
-	else
-	print(indent .. "{")
-	end
-
-	key = ""
-	for k,v in pairs(table) do
-		if type(v) == "table" and level <= maxLvl then
-			key = k
-			addon:printTab(v, level + 1, maxLvl)
-		else
-			local content = string.format("%s%s = %s", indent .. "  ",tostring(k), tostring(v))
-			print(content)  
-		end
-	end
-	print(indent .. "}")
-end

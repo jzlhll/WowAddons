@@ -17,7 +17,7 @@ local initCfg = function()
     showBagTrade = getCfg("showBagTrade")
 end
 
-local ZhubaoList = {
+local ZhubaoGreenList = {
 	36917,
     36923,
     36920,
@@ -27,7 +27,7 @@ local ZhubaoList = {
 }
 
 local function isZhubaoFile(itemId)
-    for _, v in pairs(ZhubaoList) do
+    for _, v in pairs(ZhubaoGreenList) do
         if v == itemId then
             return true
         end

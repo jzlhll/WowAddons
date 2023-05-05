@@ -9,6 +9,12 @@ Cfg.lua
 
 InitAtBefore.lua
 
+Utils/Utils.lua
+
+Modules/AHs/AHCustomScan.lua
+Modules/AHs/Constants.lua
+Modules/AHs/AHScanTimer.lua
+
 Modules/Units/TooltipTextUtil.lua
 Modules/Units/BagCanTrade.lua
 
@@ -19,5 +25,7 @@ Modules/AutoLoads.lua
 Modules/BagActions.lua
 
 Modules/RaidMembersCd.lua
+
+Modules/AH.lua
 
 InitAtLast.lua
