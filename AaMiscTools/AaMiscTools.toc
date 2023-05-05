@@ -7,9 +7,12 @@
 
 Cfg.lua
 
+Utils/Class.lua
+Utils/Utils.lua
+
 InitAtBefore.lua
 
-Utils/Utils.lua
+Modules/AHs/DataAlgoSimple.lua
 
 Modules/AHs/AHCustomScan.lua
 Modules/AHs/Constants.lua
