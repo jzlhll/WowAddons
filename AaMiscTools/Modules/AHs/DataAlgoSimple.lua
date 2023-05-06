@@ -1,39 +1,63 @@
 ---这是一个类。每次使用请新建。现在只做一个纯数字，而不做obj的统计
+--https://zhuanlan.zhihu.com/p/93855259
+--https://mp.weixin.qq.com/s?__biz=MzU0MDQ1NjAzNg==&mid=2247544548&idx=3&sn=940de3fcf791c1d77d640a863c5a7109&chksm=fb3a8befcc4d02f9ec6deb9fb043d074b7ae81f2b230601f1067d88f891fc4b86b1888b6a899&scene=27
+--https://blog.csdn.net/ChenVast/article/details/82791088 Q检测法的缺点
+
+--[[
+    拉依达准则法（3δ）：简单，无需查表。测量次数较多或要求不高时用。是最常用的异常值判定与剔除准则。但当测量次数《=10次时，该准则失效。
+如果实验数据值的总体x是服从正态分布的，则
+异常值（outlier）的判别与剔除(rejection)
+式中，μ与σ分别表示正态总体的数学期望和标准差。此时，在实验数据值中出现大于μ＋3σ或小于μ—3σ数据值的概率是很小的。因此，根据上式对于大于μ＋3σ或小于μ—3σ的实验数据值作为异常值，予以剔除。具体计算方法参见http://202.121.199.249/foundrymate/lessons/data-analysis/13/131.htm
+在这种情况下，异常值是指一组测定值中与平均值的偏差超过两倍标准差的测定值。与平均值的偏差超过三倍标准差的测定值，称为高度异常的异常值。在处理数据时，应剔除高度异常的异常值。异常值是否剔除，视具体情况而定。在统计检验时，指定为检出异常值的显著性水平α=0.05，称为检出水平；指定为检出高度异常的异常值的显著性水平α=0.01，称为舍弃水平，又称剔除水平(reject level)。
+标准化数值（Z-score）可用来帮助识别异常值。Z分数标准化后的数据服从正态分布。因此，应用Z分数可识别异常值。我们建议将Z分数低于-3或高于3的数据看成是异常值。这些数据的准确性要复查，以决定它是否属于该数据集。
+肖维勒准则法（Chauvenet）：经典方法，改善了拉依达准则，过去应用较多，但它没有固定的概率意义，特别是当测量数据值n无穷大时失效。
+狄克逊准则法（Dixon）：对数据值中只存在一个异常值时，效果良好。担当异常值不止一个且出现在同侧时，检验效果不好。尤其同侧的异常值较接近时效果更差，易遭受到屏蔽效应。
+罗马诺夫斯基（t检验）准则法：计算较为复杂。
+格拉布斯准则法（Grubbs）：和狄克逊法均给出了严格的结果，但存在狄克逊法同样的缺陷。朱宏等人采用数据值的中位数取代平均值，改进得到了更为稳健的处理方法。有效消除了同侧异常值的屏蔽效应。
+
+国际上常推荐采用格拉布斯准则法。
+]]
 
 local _, addon = ...
 addon.DataAlgoSimple = addon.class_newInstance("DataAlgoSimple")
 local DA = addon.DataAlgoSimple
+local tabinsert = table.insert
+local tabrm = table.remove
 
 function DA:Add(num)
-  table.insert(self.dataTable, num)
+    tabinsert(self.dataTable, num)
 end
 
 function DA:Init()
-  self.dataTable = self.dataTable or {}
+    self.dataTable = self.dataTable or {}
 end
 
 function DA:Clear()
-  self.dataTable = nil
+    self.dataTable = nil
 end
 
 function log(...)
   if false then print(...) end
 end
 
--- 3σ规则算法函数
-function DA:SimpleCalute()
-    log("simpleCalute dataSize "..#self.dataTable)
+-- 使用BoxplotFilter算法或者使用ThreeSigma算法过滤异常数据
+function DA:AlgoTest()
+    log("AlgoTest1 dataSize "..#self.dataTable)
+    --排序
+    print("after before: "..#self.dataTable)
     addon:QuickSort(self.dataTable)
+    --算法1：BoxplotFilter过滤
+    self:BoxplotFilter(self.dataTable, 1.7, 1.7)
 
-    --循环使用3sigma算法来去除不合理数据，直到完美
-    local hasRemoved
-    for i=1,10 do
-        log("simpleCalute dataSize"..i.." "..#self.dataTable)
-        hasRemoved = self:judge(3)
-        if not hasRemoved then
-            break
-        end
-    end
+    --算法2: 3-sigma 循环使用3sigma算法来去除不合理数据，直到完美
+    -- local hasRemoved
+    -- for i=1,10 do
+    --     log("simpleCalute dataSize"..i.." "..#self.dataTable)
+    --     hasRemoved = self:judge(3)
+    --     if not hasRemoved then
+    --         break
+    --     end
+    -- end
 
     local res = {}
     for _, v in pairs(self.dataTable) do
@@ -48,6 +72,8 @@ function DA:SimpleCalute()
         log("res: "..k.." count:"..v)
     end
 end
+
+--------------------- 算法 ---------------------
 
 function DA:average()    --原始数组的算数平均值方法
     local sum = 0
@@ -75,21 +101,7 @@ function DA:standardVariance() --原始数组的标准方差值计算方法
     return r, av
 end
 
--- 删除table表中符合conditionFunc的数据
--- @param tb 要删除数据的table
--- @param conditionFunc 符合要删除的数据的条件函数
-function DA:removeTableData(tb, conditionFunc)
-  if tb ~= nil and next(tb) ~= nil then
-      for i = #tb, 1, -1 do
-          if conditionFunc(tb[i]) then
-              table.remove(tb, i)
-          end
-      end
-  end
-end
-
-function DA:judge(lvl) --判断异常值方法，若异常，则输出
-    --log("judge...")
+function DA:ThreeSigmaRule(lvl) --判断异常值方法，若异常，则输出
     local sum = 0
     local size = #self.dataTable
     local abs = math.abs
@@ -104,11 +116,103 @@ function DA:judge(lvl) --判断异常值方法，若异常，则输出
         if abs(tmp - av) > sv3 then
             if tmp ~= lastRm then
                 lastRm = tmp
-                log("judge rm: "..tmp)
+                log("Three SigmaRule rm: "..tmp)
             end
-            table.remove(self.dataTable, i)
+            tabrm(self.dataTable, i)
             hasRemoved = true
         end
     end
     return hasRemoved
+end
+
+function DA:ThreeSigmaFilter()
+    --循环使用3sigma算法来去除不合理数据，直到完美
+    local hasRemoved
+    for i=1,10 do
+        log("AlgoTest2 dataSize"..i.." "..#self.dataTable)
+        hasRemoved = self:ThreeSigmaRule(3)
+        if not hasRemoved then
+            break
+        end
+    end
+end
+
+
+local function median(sortedList)
+    local j = 0
+
+    local size = #sortedList
+    if size % 2 == 1 then
+        j = sortedList[(size-1)/2 + 1]
+    else
+        j = (sortedList[size/2] + sortedList[size/2+1] + 0.0) / 2
+    end
+    return j
+end
+
+local function compareTo(d1, d2)
+    if d1 < d2 then
+        return -1 -- Neither val is NaN, thisVal is smaller
+    elseif d1 > d2 then
+        return 1
+    else
+        return 0
+    end
+end
+
+function DA:BoxplotFilter(data, multiplierMax, multiplierMin)
+    if #data < 4 then
+        return
+    end
+    
+    local dataSize = #data
+    local dataSizeP4 = math.floor(dataSize / 4)
+
+    -- 下四分位数
+    local q1 = data[dataSizeP4] / 4 + data[dataSizeP4 + 1] * 3 / 4
+    -- 中位数
+    local q2 = median(data)
+    -- 上四分位数
+    local q3 = data[dataSize - dataSizeP4] * 3 / 4 + data[dataSizeP4 - dataSizeP4 + 1] / 4
+    -- 计算四分位距IQR
+    local iqr = q3 - q1
+    -- 默认乘1.5，剔除过多正常值后改成1.7
+    if multiplierMax == nil then
+        multiplierMax = 1.7
+    end
+    -- 默认乘1.5
+    if multiplierMin == nil then
+        multiplierMin = 1.5
+    end
+    local max = q3 + multiplierMax * iqr
+    local min = q1 - multiplierMin * iqr
+    --log("q1: ", q1, " median: ", q2, " q3: ", q3, " \nmax: ", max, " min:", min)
+
+    local i = #data
+    local zero = 0.00
+
+    local isMinEqualMax = compareTo(min, max)
+    local isQ1EqualQ2 = compareTo(q1, q2)
+    local isQ2Is0 = compareTo(q2, zero)
+
+    if isMinEqualMax or isQ1EqualQ2 or isQ2Is0 then
+        log("BoxPlot: has too many similar data!")
+        return
+    end
+
+    while i >= 1 do
+        local vo = data[i]
+        if compareTo(vo, min) < 0 or compareTo(vo, max) > 0 then
+            --[[
+            --忽略零比较多的情况
+            local compTo1 = compareTo(min, max) == 0 and compareTo(min, zero) == 0
+            local compTo2 = compareTo(q1, q2) == 0 and compareTo(q2, zero) == 0
+            if not (compTo1 or compTo2) then
+                tabinsert(errorData, vo)
+            end]]--
+            log("BoxPlot: remove: "..vo)
+            tabrm(data, i)
+        end
+        i = i - 1
+    end
 end

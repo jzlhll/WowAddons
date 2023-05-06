@@ -56,7 +56,7 @@ circle:draw()                           -- 输出: draw circle, radius = 200.00
 local rectangle = Rectangle.new()       -- 输出: Shape:ctor(rectangle)
 rectangle:draw()                        -- 输出: draw rectangle
 ]]
-function addon:class_newInstance(classname, super)
+addon.class_newInstance = function(classname, super)
     local superType = type(super)
     local cls
 
@@ -135,7 +135,7 @@ print(iskindof(Duck.new(), "Animal")) -- 输出 true
 @return boolean
 
 ]]
-function addon:class_isKindOf(obj, classname)
+addon.class_isKindOf = function(obj, classname)
     local t = type(obj)
     local mt
     if t == "table" then
