@@ -109,7 +109,8 @@ local init = function()
 	hooksecurefunc("FriendsFrame_UpdateFriendButton", updateFriends)
 end
 
-local receiveMainMsg = function(event, ...)
+local receiveMainMsg
+receiveMainMsg = function(event, ...)
     if event == "later" then
 		init()
         addon:unRegistGlobalEvent(receiveMainMsg)

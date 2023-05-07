@@ -4,14 +4,27 @@ local tabInsert, tabRemove = table.insert, table.remove
 
 addon.AHCustomScan = addon.AHCustomScan or {}
 local AH = addon.AHCustomScan
+local algo --过滤算法
+local scanTimer, saveTimer -- 时间间隔辅助类
 
-local isScanning = false
+local function getAlgo()
+    if algo then return algo end
+    algo = addon.DataAlgoSimple.new()
+    return algo
+end
 
-local index, v
+local function nextScan(me)
+    
+end
 
-local algo = addon.DataAlgoSimple.new()
+local function getScanTimer(me)
+    if scanTimer then return scanTimer end
+    scanTimer = addon.TimerClass.new()
+    scanTimer:Init(0.6, me, nextScan)
+end
 
 function AH:Init()
+
     AH.defaultScanList = {}
     for _, v in pairs(AH.Constants.ScanList) do
         tabInsert(AH.defaultScanList, v)
@@ -55,8 +68,8 @@ function AH:NextScan(scanId)
 
     if self.scanningListIndex == 0 then
         print("End Scan")
-        AH:EndScan()
         AH:AlgoAndSave()
+        AH:EndScan()
     else
         local name = self.scanningList[self.scanningListIndex]
         print("Scan: "..name..", page: "..self.scanningListCurPage)
@@ -65,17 +78,16 @@ function AH:NextScan(scanId)
 end
 
 function AH:AlgoAndSave() --todo本函数会卡。
-    local bigPrice
+    local price
     local totalCount = 0
     for itemID, entries in pairs(self.scanResultList) do
-        algo:Init()
+        getAlgo():Init()
 
         local itemLink1, itemLink2
         for _, entry in pairs(entries) do
             if itemLink1 == nil then
                 itemLink1 = entry.link
                 itemLink2 = entry.link
-                itemLink3 = entry.link
             end
 
             if entry.link ~= itemLink1 then
@@ -83,18 +95,18 @@ function AH:AlgoAndSave() --todo本函数会卡。
             end
 
             if entry.buyoutPrice > entry.minBid then
-                bigPrice = entry.buyoutPrice / entry.count
+                price = entry.buyoutPrice / entry.count
             else
-                bigPrice = entry.minBid / entry.count
+                price = entry.minBid / entry.count
             end
 
             for i = 1, entry.count do
-                algo:Add(bigPrice)
+                getAlgo():Add(price)
                 totalCount = totalCount + 1
             end
         end
         
-        local showLog = algo:AlgoTest()
+        local showLog = getAlgo():AlgoTest()
         if showLog then
             MiscDB.AHPrices = MiscDB.AHPrices or {}
             MiscDB.AHPrices[itemID] = {
@@ -104,7 +116,7 @@ function AH:AlgoAndSave() --todo本函数会卡。
                 time = date("%Y-%m-%d"),
             }
         end
-        algo:Clear()
+        getAlgo():Clear()
     end
     --print("ScanCalucate time="..(GetTime() - startTime))
 end

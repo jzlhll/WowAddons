@@ -14,7 +14,7 @@ end
 function addon:registGlobalEvent(func)
 	if type(func) == "function" then
 	    for _,v in pairs(addon.modFuncs) do
-			if v == value then return end
+			if v == func then return end
    		end
 
 		table.insert(addon.modFuncs, func)

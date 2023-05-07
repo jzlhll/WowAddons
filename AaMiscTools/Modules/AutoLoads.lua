@@ -107,7 +107,8 @@ local function init()
     end
 end
 
-local receiveMainMsg = function(event, ...)
+local receiveMainMsg
+receiveMainMsg = function(event, ...)
     if event == "later" then
         init()
         addon:unRegistGlobalEvent(receiveMainMsg)

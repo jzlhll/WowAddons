@@ -2,7 +2,7 @@ local _, addon = ...
 addon.AHCustomScan = addon.AHCustomScan or {}
 local AH = addon.AHCustomScan
 
-local SCAN_DELTA = 0.75 -- smallest 0.3
+local SCAN_DELTA = 0.6 -- smallest 0.3
 
 local function OnTimerUpdate()
     local cur = GetTime()

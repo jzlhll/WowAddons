@@ -94,7 +94,8 @@ addon:registCategoryCreator(function()
 	end)
 end)
 
-local receiveMainMsg = function(event, ...)
+local receiveMainMsg
+receiveMainMsg = function(event, ...)
     if event == "later2" then
         initCfg()
 

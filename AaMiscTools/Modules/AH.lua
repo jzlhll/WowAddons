@@ -29,7 +29,8 @@ local function auctionEventAction(init)
 	end
 end
 
-local receiveMainMsg = function(event, ...)
+local receiveMainMsg
+receiveMainMsg = function(event, ...)
 	if event == "AUCTION_HOUSE_SHOW" then
 		initButtonFrame()
 		buttonFrame:Show()
