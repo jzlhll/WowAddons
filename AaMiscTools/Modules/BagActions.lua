@@ -39,7 +39,7 @@ local function CreateExtraText(f)
 	if f.miscToolBagExtraText == nil then
 		f.miscToolBagExtraText = f:CreateFontString(nil, 'OVERLAY');
 		f.miscToolBagExtraText:SetPoint('TOPLEFT', f, 'TOPLEFT', -2, -1);
-		f.miscToolBagExtraText:SetFont(STANDARD_TEXT_FONT, 13, 'OUTLINE');
+		f.miscToolBagExtraText:SetFont(STANDARD_TEXT_FONT, 12, 'OUTLINE');
 	end
 end
 

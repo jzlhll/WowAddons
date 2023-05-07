@@ -81,7 +81,7 @@ local function _quickSort(sortList, left, right)
 		if i < j then
 			sortList[i], sortList[j] = sortList[j], sortList[i]
 		end
-	end
+ 	end
 	
 	sortList[left], sortList[i] = sortList[i], sortList[left]
 	_quickSort(sortList, left, i-1)
@@ -90,6 +90,21 @@ end
 
 function addon:QuickSort(list)
 	_quickSort(list, 1, #list)
+end
+
+function addon:InsertSort(tab)
+-- 插入排序
+    local len = #tab
+    for i=1,len-1 do
+		local j = i+1
+		while(j > 1)  do
+			if (tab[j] < tab[j-1]) then
+				tab[j],tab[j-1] = tab[j-1],tab[j]
+			end
+			j = j -1
+		end 
+    end
+    return tab
 end
 
 function addon:pairsByKeys(t)

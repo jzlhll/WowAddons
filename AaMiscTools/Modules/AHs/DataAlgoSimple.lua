@@ -42,22 +42,21 @@ end
 
 -- 使用BoxplotFilter算法或者使用ThreeSigma算法过滤异常数据
 function DA:AlgoTest()
-    log("AlgoTest1 dataSize "..#self.dataTable)
-    --排序
-    print("after before: "..#self.dataTable)
+    local origSize = #self.dataTable
+    log("AlgoTest size "..origSize)
+    if origSize == 0 then return "--" end
+    if origSize == 1 then return ""..self.dataTable[1] end
+
+    --1. 排序
     addon:QuickSort(self.dataTable)
+
     --算法1：BoxplotFilter过滤
-    self:BoxplotFilter(self.dataTable, 1.7, 1.7)
+    self:BoxplotFilter(self.dataTable, 1.8, 2.2)
+    log("AlgoTest after BoxplotFilter size: "..#self.dataTable)
 
     --算法2: 3-sigma 循环使用3sigma算法来去除不合理数据，直到完美
-    -- local hasRemoved
-    -- for i=1,10 do
-    --     log("simpleCalute dataSize"..i.." "..#self.dataTable)
-    --     hasRemoved = self:judge(3)
-    --     if not hasRemoved then
-    --         break
-    --     end
-    -- end
+    self:ThreeSigmaFilter(2)
+    log("AlgoTest after ThreeSigmaFilter size: "..#self.dataTable)
 
     local res = {}
     for _, v in pairs(self.dataTable) do
@@ -68,11 +67,26 @@ function DA:AlgoTest()
         end
     end
 
+    local count = 0
+    local printLog = ""
+    local showLog = ""
     for k, v in addon:pairsByKeys(res) do
-        log("res: "..k.." count:"..v)
+        printLog = printLog ..", "..k.."*"..v
+        count = count + 1
+        if count == 5 then
+            break
+        end
+
+        if count < 4 then
+            showLog = showLog..k.."*"..v..", "
+        end
     end
+    log(printLog)
+    log(showLog)
+    return showLog
 end
 
+------------------------------------------------
 --------------------- 算法 ---------------------
 
 function DA:average()    --原始数组的算数平均值方法
@@ -111,32 +125,35 @@ function DA:ThreeSigmaRule(lvl) --判断异常值方法，若异常，则输出
 
     local hasRemoved = false
     local lastRm, tmp
+    local removeList = ""
     for i=#self.dataTable, 1, -1 do
         tmp = self.dataTable[i]
         if abs(tmp - av) > sv3 then
             if tmp ~= lastRm then
                 lastRm = tmp
-                log("Three SigmaRule rm: "..tmp)
+                removeList = removeList..", "..lastRm
             end
             tabrm(self.dataTable, i)
             hasRemoved = true
         end
     end
+    log("ThreeSigma rm: "..removeList)
     return hasRemoved
 end
 
-function DA:ThreeSigmaFilter()
+function DA:ThreeSigmaFilter(circles, level)
     --循环使用3sigma算法来去除不合理数据，直到完美
+    if circles == nil then circles = 10 end
+    if level == nil then level = 3 end
     local hasRemoved
-    for i=1,10 do
-        log("AlgoTest2 dataSize"..i.." "..#self.dataTable)
-        hasRemoved = self:ThreeSigmaRule(3)
+    for i=1, circles do
+        --log("ThreeSigma dataSize"..i.." "..#self.dataTable)
+        hasRemoved = self:ThreeSigmaRule(level)
         if not hasRemoved then
             break
         end
     end
 end
-
 
 local function median(sortedList)
     local j = 0
@@ -160,20 +177,21 @@ local function compareTo(d1, d2)
     end
 end
 
+---由于我们是AH拍卖行，期待数据是靠前的。
 function DA:BoxplotFilter(data, multiplierMax, multiplierMin)
     if #data < 4 then
         return
     end
     
     local dataSize = #data
-    local dataSizeP4 = math.floor(dataSize / 4)
+    local cut4Size = math.floor(dataSize / 4)
 
     -- 下四分位数
-    local q1 = data[dataSizeP4] / 4 + data[dataSizeP4 + 1] * 3 / 4
+    local q1 = data[cut4Size] / 4 + data[cut4Size + 1] * 3 / 4
     -- 中位数
     local q2 = median(data)
     -- 上四分位数
-    local q3 = data[dataSize - dataSizeP4] * 3 / 4 + data[dataSizeP4 - dataSizeP4 + 1] / 4
+    local q3 = data[dataSize - cut4Size] * 3 / 4 + data[dataSize - cut4Size + 1] / 4
     -- 计算四分位距IQR
     local iqr = q3 - q1
     -- 默认乘1.5，剔除过多正常值后改成1.7
@@ -186,7 +204,7 @@ function DA:BoxplotFilter(data, multiplierMax, multiplierMin)
     end
     local max = q3 + multiplierMax * iqr
     local min = q1 - multiplierMin * iqr
-    --log("q1: ", q1, " median: ", q2, " q3: ", q3, " \nmax: ", max, " min:", min)
+    --log("BoxPlot q1: ", q1, " median: ", q2, " q3: ", q3, " \nmax: ", max, " min:", min)
 
     local i = #data
     local zero = 0.00
@@ -195,11 +213,15 @@ function DA:BoxplotFilter(data, multiplierMax, multiplierMin)
     local isQ1EqualQ2 = compareTo(q1, q2)
     local isQ2Is0 = compareTo(q2, zero)
 
-    if isMinEqualMax or isQ1EqualQ2 or isQ2Is0 then
-        log("BoxPlot: has too many similar data!")
+    if isMinEqualMax == 0 or isQ1EqualQ2 == 0 or isQ2Is0 == 0 then
+        log("BoxPlot: isMinEqualMax "..tostring(isMinEqualMax))
+        log("BoxPlot: isQ1EqualQ2 "..tostring(isQ1EqualQ2))
+        log("BoxPlot: isQ2Is0 "..tostring(isQ2Is0))
         return
     end
 
+    local lastVo = nil
+    local removeList = ""
     while i >= 1 do
         local vo = data[i]
         if compareTo(vo, min) < 0 or compareTo(vo, max) > 0 then
@@ -210,9 +232,13 @@ function DA:BoxplotFilter(data, multiplierMax, multiplierMin)
             if not (compTo1 or compTo2) then
                 tabinsert(errorData, vo)
             end]]--
-            log("BoxPlot: remove: "..vo)
+            if lastVo ~= vo then
+                lastVo = vo
+                removeList = removeList..", "..vo
+            end
             tabrm(data, i)
         end
         i = i - 1
     end
+    log("BoxPlot: remove "..removeList)
 end

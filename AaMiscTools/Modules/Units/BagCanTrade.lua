@@ -105,7 +105,7 @@ function TD:CheckAllBags()
                             fontStr = f.miscToolBagExtraText
                             if fontStr then
                                 lvl = GetDetailedItemLevelInfo(link)
-                                fontStr:SetVertexColor(0.95, 0.1, 0.3, 1.0)
+                                fontStr:SetVertexColor(1.0, 0.1, 0.55, 1.0)
                                 fontStr:SetText(lvl.."\n"..canTradeWords)
                             end
                         end
