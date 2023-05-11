@@ -119,7 +119,9 @@ receiveMainMsg = function(event, ...)
             end
         end
 
-        addon:unRegistGlobalEvent(receiveMainMsg)
+        return true
     end
+
+    return false
 end
 addon:registGlobalEvent(receiveMainMsg)

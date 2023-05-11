@@ -40,6 +40,40 @@ function log(...)
   if false then print(...) end
 end
 
+local function GetMoneyStringL(money, separateThousands)
+	local goldString, silverString, copperString;
+	local gold = floor(money / (COPPER_PER_SILVER * SILVER_PER_GOLD));
+	local silver = floor((money - (gold * COPPER_PER_SILVER * SILVER_PER_GOLD)) / COPPER_PER_SILVER);
+	local copper = mod(money, COPPER_PER_SILVER);
+
+    if (separateThousands) then
+        goldString = FormatLargeNumber(gold)..GOLD_AMOUNT_SYMBOL;
+    else
+        goldString = gold..GOLD_AMOUNT_SYMBOL;
+    end
+    silverString = silver..SILVER_AMOUNT_SYMBOL;
+    copperString = copper..COPPER_AMOUNT_SYMBOL;
+
+	local moneyString = "";
+	local separator = "";
+	if ( gold > 0 ) then
+		moneyString = goldString;
+		separator = " ";
+	end
+
+    if gold < 10 then
+        if ( silver > 0 ) then
+            moneyString = moneyString..separator..silverString;
+            separator = " ";
+        end
+        if ( copper > 0 or moneyString == "" ) then
+            moneyString = moneyString..separator..copperString;
+        end
+    end
+
+	return moneyString, gold; --allan add
+end
+
 -- 使用BoxplotFilter算法或者使用ThreeSigma算法过滤异常数据
 function DA:AlgoTest()
     local origSize = #self.dataTable
@@ -68,20 +102,16 @@ function DA:AlgoTest()
     end
 
     local count = 0
-    local printLog = ""
     local showLog = ""
     for k, v in addon:pairsByKeys(res) do
-        printLog = printLog ..", "..k.."*"..v
         count = count + 1
-        if count == 5 then
+        if count < 3 then
+            showLog = showLog..GetMoneyStringL(k, true).."*"..v..", "
+        elseif count == 3 then
+            showLog = showLog..GetMoneyStringL(k, true).."*"..v
             break
         end
-
-        if count < 4 then
-            showLog = showLog..k.."*"..v..", "
-        end
     end
-    log(printLog)
     log(showLog)
     return showLog
 end

@@ -146,28 +146,37 @@ local function categoriesUi()
 end
 
 function addon:notifyEvent(event, ...)
-    for _, v in pairs(addon.modFuncs) do
-        if v then v(event, ...) end
+	local delTab = {}
+	local func
+    for _, func in pairs(addon.modFuncs) do
+        if func then
+			local isDel = func(event, ...)
+			if isDel then
+				table.insert(delTab, func)
+			end
+		end
 	end
+
+    for _, func in pairs(delTab) do
+		addon:unRegistGlobalEvent(func)
+	end
+	delTab = nil
 end
 
 local function OnTimerUpdate()
     local cur = GetTime()
-    if isLaterNotified == 0 and (cur - lastEnterTime) >= 2 then
+	local del = cur - lastEnterTime
+    if isLaterNotified == 0 and del >= 2 then
         isLaterNotified = 1
         categoriesUi()
         addon:notifyEvent("later")
 		return
-    end
-
-    if isLaterNotified == 1 and (cur - lastEnterTime) >= 4 then
+	elseif isLaterNotified == 1 and del >= 4 then
         isLaterNotified = 2
         addon:notifyEvent("later2")
 		return
-    end
-
-	if isLaterNotified == 1 and (cur - lastEnterTime) >= 6 then
-        isLaterNotified = 2
+    elseif isLaterNotified == 2 and del >= 6 then
+        isLaterNotified = 3
         addon:notifyEvent("later3")
         addon.eventframe:SetScript("OnUpdate", nil)
     end

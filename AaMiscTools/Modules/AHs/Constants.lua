@@ -1,5 +1,5 @@
-local _, addon = ...
-addon.AHCustomScan = addon.AHCustomScan or {}
+local _, addon = ...;addon.AHCustomScan = addon.AHCustomScan or {}
+
 local AH = addon.AHCustomScan
 
 AH.Constants = {}
@@ -21,6 +21,15 @@ AH.Constants.ScanList = {
     "无限之尘",
     "强效宇宙精华", 
     "深渊水晶", 
+    
+    --其他扫描项
+    "符文宝珠",
+    "龙眼石",
+    "石血合剂",
+    "无尽怒气合剂",
+    "不灭药水",
+    "速度药水",
+
     ---25奥杜尔
     "铁铆战盔",
     "生命熔炉胸铠",
@@ -46,6 +55,4 @@ AH.Constants.ScanList = {
     "共鸣裹手",
     "机械侏儒的电缆",
     "深渊束腕",
-    -- -- 其他扫描项
-    "符文宝珠",
 }

@@ -176,8 +176,9 @@ local receiveMainMsg
 receiveMainMsg = function(event, ...)
     if event == "later" then
         initSelf()
-        addon:unRegistGlobalEvent(receiveMainMsg)
+        return true
     end
+    return false
 end
 addon:registGlobalEvent(receiveMainMsg)
 

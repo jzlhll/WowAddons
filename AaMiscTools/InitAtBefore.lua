@@ -10,7 +10,7 @@ function addon:registCategoryCreator(fun)
     table.insert(addon.createUiFuncs, fun)
 end
 
---注册一个模块
+--注册一个函数，如果func返回true则自动反注册这个函数。
 function addon:registGlobalEvent(func)
 	if type(func) == "function" then
 	    for _,v in pairs(addon.modFuncs) do

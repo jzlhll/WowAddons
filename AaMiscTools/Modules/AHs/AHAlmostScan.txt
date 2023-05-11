@@ -1,8 +1,7 @@
-local _, addon = ...
+local _, addon = ...;addon.AHCustomScan = addon.AHCustomScan or {}
 ----暂时将支持的东西设置到列表中。
 local tabInsert = table.insert
 
-addon.AHCustomScan = addon.AHCustomScan or {}
 local AH = addon.AHCustomScan
 -- 扫描装备的参数, 默认为紫装200+
 function AH:GetEquipsScanParams(page)

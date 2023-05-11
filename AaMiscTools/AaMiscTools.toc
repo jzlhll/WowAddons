@@ -9,14 +9,16 @@ Cfg.lua
 
 Utils/Class.lua
 Utils/Utils.lua
+Utils/Timer.lua
+
+Modules/Units/TooltipUtil.lua
 
 InitAtBefore.lua
 
 Modules/AHs/DataAlgoSimple.lua
-
-Modules/AHs/AHCustomScan.lua
 Modules/AHs/Constants.lua
-Modules/AHs/AHScanTimer.lua
+Modules/AHs/AHCustomScan.lua
+Modules/AHs/Hooks.lua
 
 Modules/Units/TooltipTextUtil.lua
 Modules/Units/BagCanTrade.lua
@@ -24,11 +26,8 @@ Modules/Units/BagCanTrade.lua
 Modules/163QuestPrice.lua
 Modules/iColor.lua
 Modules/AutoLoads.lua
-
 Modules/BagActions.lua
-
 Modules/RaidMembersCd.lua
-
 Modules/AH.lua
 
 InitAtLast.lua
