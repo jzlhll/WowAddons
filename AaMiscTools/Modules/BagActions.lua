@@ -76,6 +76,7 @@ local function UpdateExtraText(f)
 end
 
 addon:registCategoryCreator(function()
+    addon:createCategoryLine()
     addon:initCategoryFont("支持Combuctor和Bagnon相关的背包显示")
 
 	addon:initCategoryCheckBox("显示绿色珠宝石头名字*", getCfg("showBagGreenZhubao"), function(cb)

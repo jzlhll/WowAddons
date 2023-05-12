@@ -4,12 +4,7 @@ local POINT_X = 20
 local POINT_Y = -150
 local GetSpellCooldown = GetSpellCooldown
 local CombatLogGetCurrentEventInfo = CombatLogGetCurrentEventInfo
-local frame = CreateFrame("Frame", "AaMiscCooldownFrame", UIParent, "BackdropTemplate")
-frame:SetSize(10, 25)
-frame:SetPoint("TOPLEFT", 0, 0)
-frame:SetBackdropColor(0, 0, 0, 0.8)
-frame:SetBackdropBorderColor(1, 1, 1, 0.5)
-frame:Hide()
+local frame
 
 local isRegistCombatEvent = false
 local isRegistTimer = false
@@ -23,6 +18,11 @@ local paladinBaohuSpellID1 = 10278
 local paladinBaohuTab = {} -- 存储QS保护之手特殊表：结构为{"大川"=180, "玛法了啊"=320}
 
 local spellIdTab = {
+	{
+		spellID = {26994, 48477}, -- 
+		spellName = "战复",
+		spellCD = 600
+	},
 	{
 		spellID = {31821}, -- 
 		spellName = "光环掌握",
@@ -64,10 +64,6 @@ local spellIdTab = {
 		spellCD = 180,
 	},
 }
-
-local function checkMemberCd()
-
-end
 
 local function tabLength(t)
     local len=0
@@ -136,56 +132,6 @@ local function timerCallback(self, elapsed)
 	end
 end
 
-function frame:RegistTimerEvent()
-	if isRegistTimer then return end
-	frame:SetScript("OnUpdate", timerCallback)
-	isRegistTimer = true
-	if debug then print("AaMiscCombat 注册时间信息") end
-end
-
-function frame:UnRegistTimerEvent()
-	if not isRegistTimer then return end
-	isRegistTimer = false
-	frame:SetScript("OnUpdate", nil)
-	if debug then print("AaMiscCombat 取消时间信息") end
-end
-
-function frame:ForceReset()
-	for i = 1, #allLines do
-		local line = allLines[i]
-		line.cdText:SetTextColor(0, 1, 0)
-		line.cdText:SetText("OK")
-		line.startTs = 0
-		line.leftSec = 0
-	end
-
-	frame:UnRegistTimerEvent()
-end
-
-function frame:WhenTimeChange()
-	local t = GetTime()
-	local isHasCding = false
-	for i = 1, #allLines do
-		local line = allLines[i]
-		local curLeftSec = line.leftSec - (t - line.startTs)
-		if curLeftSec > 0.5 then
-			line.cdText:SetTextColor(1, 0, 0)
-			line.cdText:SetText(SecondsToTime(curLeftSec))
-			isHasCding = true
-		else
-			line.leftSec = 0
-			line.cdText:SetTextColor(0, 1, 0)
-			line.cdText:SetText("OK")
-		end
-	end
-
-	if isHasCding then
-		frame:RegistTimerEvent()
-	else
-		frame:UnRegistTimerEvent()
-	end
-end
-
 local function combatEvent(frame, event, ...)
 	local _, eventType, _, _, name, _, _, _, _, _, _, spellID = CombatLogGetCurrentEventInfo()
 	if eventType == "SPELL_CAST_SUCCESS" then
@@ -245,16 +191,77 @@ local function updateTeamTab()
 	end
 end
 
-function frame:GROUP_ROSTER_UPDATE()
-	updateTeamTab()
-end
+local function Init()
+	if frame then return end
+	frame = CreateFrame("Frame", "AaMiscCooldownFrame", UIParent, "BackdropTemplate")
+	frame:SetSize(10, 25)
+	frame:SetPoint("TOPLEFT", 0, 0)
+	frame:SetBackdropColor(0, 0, 0, 0.8)
+	frame:SetBackdropBorderColor(1, 1, 1, 0.5)
+	frame:Hide()
+		
+	function frame:GROUP_ROSTER_UPDATE()
+		updateTeamTab()
+	end
 
-function frame:ENCOUNTER_START()
-	frame:ForceReset()
+	function frame:ENCOUNTER_START()
+		frame:ForceReset()
+	end
+
+	function frame:RegistTimerEvent()
+		if isRegistTimer then return end
+		frame:SetScript("OnUpdate", timerCallback)
+		isRegistTimer = true
+		if debug then print("AaMiscCombat 注册时间信息") end
+	end
+
+	function frame:UnRegistTimerEvent()
+		if not isRegistTimer then return end
+		isRegistTimer = false
+		frame:SetScript("OnUpdate", nil)
+		if debug then print("AaMiscCombat 取消时间信息") end
+	end
+
+	function frame:ForceReset()
+		for i = 1, #allLines do
+			local line = allLines[i]
+			line.cdText:SetTextColor(0, 1, 0)
+			line.cdText:SetText("OK")
+			line.startTs = 0
+			line.leftSec = 0
+		end
+
+		frame:UnRegistTimerEvent()
+	end
+
+	function frame:WhenTimeChange()
+		local t = GetTime()
+		local isHasCding = false
+		for i = 1, #allLines do
+			local line = allLines[i]
+			local curLeftSec = line.leftSec - (t - line.startTs)
+			if curLeftSec > 0.5 then
+				line.cdText:SetTextColor(1, 0, 0)
+				line.cdText:SetText(SecondsToTime(curLeftSec))
+				isHasCding = true
+			else
+				line.leftSec = 0
+				line.cdText:SetTextColor(0, 1, 0)
+				line.cdText:SetText("OK")
+			end
+		end
+
+		if isHasCding then
+			frame:RegistTimerEvent()
+		else
+			frame:UnRegistTimerEvent()
+		end
+	end
 end
 
 local receiveMainMsg = function(event, ...)
 	if event == "later" then
+		Init()
         frame:RegisterEvent("GROUP_ROSTER_UPDATE")
         frame:RegisterEvent("ENCOUNTER_START") -- 不做监听boss战结束；因为我想看看谁没用技能
 		updateTeamTab()
@@ -262,3 +269,10 @@ local receiveMainMsg = function(event, ...)
 end
 
 addon:registGlobalEvent(receiveMainMsg)
+
+addon:registCategoryCreator(function()
+	addon:initCategoryCheckBox("监控团队减伤技能*", addon.getCfg("raidAbilityWatcher"), function(cb)
+		local c = not addon.getCfg("raidAbilityWatcher")
+        addon.setCfg("raidAbilityWatcher", c)
+	end)
+end)

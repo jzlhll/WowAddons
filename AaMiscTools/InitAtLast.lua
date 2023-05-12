@@ -27,6 +27,14 @@ local function categoryFrameInit()
 	text:SetPoint("TOPLEFT", addon.categoryContent, categoryStartX, categoryCurrentY)
 	text:SetJustifyH("LEFT")
 	text:SetText("需要重载界面的配置有*号")
+
+	local b = CreateFrame("Button", nil, addon.categoryContent, "GameMenuButtonTemplate")
+    b:SetWidth(90)
+    b:SetHeight(35)
+    b:SetPoint("TOPLEFT", categoryStartX + 400, categoryCurrentY)
+    b:SetText("重载UI")
+    b:SetScript("OnClick", function() ReloadUI() end)
+
 	categoryCurrentY = categoryCurrentY - offsetY
 end
 
@@ -45,7 +53,7 @@ end
 function addon:initCategoryFont(title)
 	local f = addon.categoryContent
 
-	local text = addon.categoryContent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+	local text = addon.categoryContent:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 	text:SetPoint("TOPLEFT", addon.categoryContent, categoryStartX, categoryCurrentY)
 	text:SetJustifyH("LEFT")
 	text:SetText(title)
@@ -56,12 +64,14 @@ end
 function addon:initCategoryButton(title, btnText, btnWidth, btnHeight, onClick)
 	local f = addon.categoryContent
 
-	local text = f:CreateFontString(nil,"OVERLAY","GameFontWhite")
-	text:SetPoint("TOPLEFT", check, "TOPRIGHT", 1, 0)
-	text:SetPoint("TOPLEFT", f, categoryStartX, categoryCurrentY)
-	text:SetJustifyH("LEFT")
-	text:SetText(title)
-	categoryCurrentY = categoryCurrentY - offsetY
+	if title then
+		local text = f:CreateFontString(nil,"OVERLAY","GameFontHighlight")
+		text:SetPoint("TOPLEFT", check, "TOPRIGHT", 1, 0)
+		text:SetPoint("TOPLEFT", f, categoryStartX, categoryCurrentY)
+		text:SetJustifyH("LEFT")
+		text:SetText(title)
+		categoryCurrentY = categoryCurrentY - offsetY
+	end
 
 	local b = CreateFrame("Button", nil, f, "GameMenuButtonTemplate")
     b:SetWidth(btnWidth)
@@ -102,7 +112,7 @@ function addon:initCategoryCheckBoxes(title, checks, isTabIn) -- checks = {{name
 	end
 
 	if title then
-		local text = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+		local text = f:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 		text:SetPoint("TOPLEFT", check, "TOPRIGHT", 1, 0)
 		text:SetPoint("TOPLEFT", f, categoryStartX, categoryCurrentY)
 		text:SetJustifyH("LEFT")

@@ -37,6 +37,9 @@ local defaultCfg = {
 
 	--扫描AH
 	["scanAH"] = true,
+
+	--团队技能
+	["raidAbilityWatcher"] = false,
 }
 
 -- 在初始化完成后，检查

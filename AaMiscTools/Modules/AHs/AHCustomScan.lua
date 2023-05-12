@@ -131,13 +131,15 @@ function AH:StartScan(isNew)
 end
 
 function AH:EndScan(suc)
-    if suc then 
-        print("扫描并保存结束!")
-    else
-        rint("扫描中断!")
+    if self.isScanning then
+        if suc then 
+            print("扫描并保存结束!")
+        else
+            print("扫描中断!")
+        end
+        self.scanTimer:StopTimer()
+        self.isScanning = nil
     end
-    self.scanTimer:StopTimer()
-    self.isScanning = nil
 end
 
 function AH:DumpAuctions(view)
