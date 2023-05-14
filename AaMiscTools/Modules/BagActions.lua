@@ -76,27 +76,26 @@ local function UpdateExtraText(f)
 end
 
 addon:registCategoryCreator(function()
-    addon:createCategoryLine()
-    addon:initCategoryFont("支持Combuctor和Bagnon相关的背包显示")
+    addon:createCategoryLine(1)
+    addon:initCategoryFont(1, "支持Combuctor和Bagnon相关的背包显示")
 
-	addon:initCategoryCheckBox("显示绿色珠宝石头名字*", getCfg("showBagGreenZhubao"), function(cb)
+	addon:initCategoryCheckBox(1, "显示绿色珠宝石头名字*", getCfg("showBagGreenZhubao"), function(cb)
 		local c = not getCfg("showBagGreenZhubao")
         setCfg("showBagGreenZhubao", c)
 	end)
 
-    addon:initCategoryCheckBox("显示左上角装备等级*", getCfg("showBagItemLevel"), function(cb)
+    addon:initCategoryCheckBox(1, "显示左上角装备等级*", getCfg("showBagItemLevel"), function(cb)
 		local c = not getCfg("showBagItemLevel")
         setCfg("showBagItemLevel", c)
 	end)
 
-    addon:initCategoryCheckBox("显示可交易物品*", getCfg("showBagTrade"), function(cb)
+    addon:initCategoryCheckBox(1, "显示可交易物品*", getCfg("showBagTrade"), function(cb)
 		local c = not getCfg("showBagTrade")
         setCfg("showBagTrade", c)
 	end)
 end)
 
-local receiveMainMsg
-receiveMainMsg = function(event, ...)
+addon:registGlobalEvent(function(event, ...)
     if event == "later2" then
         initCfg()
 
@@ -124,5 +123,4 @@ receiveMainMsg = function(event, ...)
     end
 
     return false
-end
-addon:registGlobalEvent(receiveMainMsg)
+end)

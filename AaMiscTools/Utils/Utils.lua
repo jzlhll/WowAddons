@@ -117,3 +117,15 @@ function addon:pairsByKeys(t)
         return a[i], t[a[i]]
     end
 end
+
+function addon:RemoveRepetition(TableData)
+    local bExist = {}
+    for v, k in pairs(TableData) do
+        bExist[k] = true
+    end
+    local result = {}
+    for v, k in pairs(bExist) do
+        table.insert(result, v)
+	end
+    return result
+end

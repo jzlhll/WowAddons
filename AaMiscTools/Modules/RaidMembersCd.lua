@@ -168,9 +168,6 @@ local function updateTeamTab()
 	end
     end
 
-	if debug then
-		teamTab["鬼神大川"] = "PALADIN"
-	end
 	local len = tabLength(teamTab)
 	if debug then print("AaMiscCombat 更新team "..tostring(len)) end
 
@@ -259,19 +256,22 @@ local function Init()
 	end
 end
 
-local receiveMainMsg = function(event, ...)
+addon:registGlobalEvent(function(event, ...)
 	if event == "later" then
-		Init()
-        frame:RegisterEvent("GROUP_ROSTER_UPDATE")
-        frame:RegisterEvent("ENCOUNTER_START") -- 不做监听boss战结束；因为我想看看谁没用技能
-		updateTeamTab()
+		if addon.getCfg("raidAbilityWatcher") then
+			Init()
+			frame:RegisterEvent("GROUP_ROSTER_UPDATE")
+			frame:RegisterEvent("ENCOUNTER_START") -- 不做监听boss战结束；因为我想看看谁没用技能
+			updateTeamTab()
+		end
+		
+		return true
 	end
-end
-
-addon:registGlobalEvent(receiveMainMsg)
+	return false
+end)
 
 addon:registCategoryCreator(function()
-	addon:initCategoryCheckBox("监控团队减伤技能*", addon.getCfg("raidAbilityWatcher"), function(cb)
+	addon:initCategoryCheckBox(1, "监控团队减伤技能*", addon.getCfg("raidAbilityWatcher"), function(cb)
 		local c = not addon.getCfg("raidAbilityWatcher")
         addon.setCfg("raidAbilityWatcher", c)
 	end)

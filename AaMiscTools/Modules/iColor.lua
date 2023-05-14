@@ -63,7 +63,7 @@ local function updateFriends(button)
 end
 
 addon:registCategoryCreator(function()
-	addon:initCategoryCheckBox("工会和好友职业颜色*", getCfg("guildAndFreindColorEnable"), function(cb)
+	addon:initCategoryCheckBox(1, "工会和好友职业颜色*", getCfg("guildAndFreindColorEnable"), function(cb)
 		local c = not getCfg("guildAndFreindColorEnable")
 		setCfg("guildAndFreindColorEnable", c)
 	end)
@@ -109,16 +109,13 @@ local init = function()
 	hooksecurefunc("FriendsFrame_UpdateFriendButton", updateFriends)
 end
 
-local receiveMainMsg
-receiveMainMsg = function(event, ...)
+addon:registGlobalEvent(function(event, ...)
     if event == "later" then
 		init()
         return true
     end
 	return false
-end
-
-addon:registGlobalEvent(receiveMainMsg)
+end)
 
 -- local popAccept, popFrame,popupEditText
 -- local tabInsert = table.insert

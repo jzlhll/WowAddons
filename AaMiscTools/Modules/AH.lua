@@ -29,19 +29,14 @@ local function auctionEventAction(init)
 	end
 end
 
-local receiveMainMsg
-receiveMainMsg = function(event, ...)
+addon:registGlobalEvent(function(event, ...)
 	if event == "AUCTION_HOUSE_SHOW" then
 		initButtonFrame()
 		buttonFrame:Show()
-		return
 	elseif event == "AUCTION_HOUSE_CLOSED" then
 		AH:EndScan()
 		buttonFrame:Hide()
-		return
-	end
-
-	if event == "later" then
+	elseif event == "later" then
 		local show = addon.getCfg("scanAH")
 		if show then
 			addon.eventframe:RegisterEvent("AUCTION_HOUSE_SHOW")
@@ -50,14 +45,23 @@ receiveMainMsg = function(event, ...)
 	elseif event == "later3" then
 		AH.initHookTooltip()
 	end
+end)
+
+local function ReadText()
+	local AH = addon.AHCustomScan
+	local r = ""
+	for _, v in pairs(AH.Constants.ScanList) do
+		r = r..v.."\n"
+	end
+	return r
 end
 
-addon:registGlobalEvent(receiveMainMsg)
-
 addon:registCategoryCreator(function()
-	addon:initCategoryCheckBox("扫描AH装绑和附魔材料价格", addon.getCfg("scanAH"), function(cb)
+	addon:initCategoryCheckBox(2, "扫描AH装绑和附魔材料价格", addon.getCfg("scanAH"), function(cb)
 		local c = not addon.getCfg("scanAH")
 		auctionEventAction(c)
 		addon.setCfg("scanAH", c)
 	end)
+
+	addon:initCategoryEdit(2, "扫描列表", ReadText(), 500, 500)
 end)

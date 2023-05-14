@@ -1,28 +1,25 @@
 ## Interface: 30410
 ## Title: AaMiscTools
 ## Title-zhCN: AaMiscTools小功能合集
-## Version: 0.5
+## Version: 0.6
 ## Author: allan
 ## SavedVariables: MiscDB
 
-Cfg.lua
+Init.lua
 
 Utils/Class.lua
 Utils/Utils.lua
-Utils/Timer.lua
+Utils/TimerClass.lua
+Utils/TooltipTextUtil.lua
 
-Modules/Units/TooltipUtil.lua
-
-InitAtBefore.lua
+Category.lua
 
 Modules/AHs/DataAlgoSimple.lua
 Modules/AHs/Constants.lua
 Modules/AHs/AHCustomScan.lua
 Modules/AHs/Hooks.lua
 
-Modules/Units/TooltipTextUtil.lua
-Modules/Units/BagCanTrade.lua
-
+Modules/BagCanTrade.lua
 Modules/163QuestPrice.lua
 Modules/iColor.lua
 Modules/AutoLoads.lua

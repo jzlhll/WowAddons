@@ -7,7 +7,7 @@ local setCfg = addon.setCfg
 local maxZoomCheckBoxes
 
 addon:registCategoryCreator(function()
-    addon:initCategoryCheckBoxes(nil, {
+    addon:initCategoryCheckBoxes(1, nil, {
         {
             name = "骷髅红血还原*",
             checked = getCfg("noOverride"),
@@ -26,7 +26,7 @@ addon:registCategoryCreator(function()
         }
     })
 
-    addon:initCategoryCheckBox("最远距离41码血条显示", getCfg("maxDistance"), function(cb)
+    addon:initCategoryCheckBox(1, "最远距离41码血条显示", getCfg("maxDistance"), function(cb)
         local newMax = not getCfg("maxDistance")
 		setCfg("maxDistance", newMax)
         if newMax then
@@ -34,7 +34,7 @@ addon:registCategoryCreator(function()
         end
 	end)
 
-    addon:initCategoryCheckBox("进入游戏自动收起任务栏*", getCfg("autoHideQuestWatchFrame"), function(cb)
+    addon:initCategoryCheckBox(1, "进入游戏自动收起任务栏*", getCfg("autoHideQuestWatchFrame"), function(cb)
 		local c = not getCfg("autoHideQuestWatchFrame")
         setCfg("autoHideQuestWatchFrame", c)
 	end)
@@ -64,9 +64,9 @@ addon:registCategoryCreator(function()
             end
         },
     }
-    addon:createCategoryLine()
-    maxZoomCheckBoxes = addon:initCategoryCheckBoxes("视角距离：", checkes, true)
-    addon:createCategoryLine()
+    addon:createCategoryLine(1)
+    maxZoomCheckBoxes = addon:initCategoryCheckBoxes(1, "视角距离：", checkes, true)
+    addon:createCategoryLine(1)
 end)
 
 local function init()
@@ -107,12 +107,10 @@ local function init()
     end
 end
 
-local receiveMainMsg
-receiveMainMsg = function(event, ...)
+addon:registGlobalEvent(function(event, ...)
     if event == "later" then
         init()
         return true
     end
     return false
-end
-addon:registGlobalEvent(receiveMainMsg)
+end)

@@ -187,7 +187,7 @@ end
  
 local function OnTimerUpdate()
     local cur = GetTime()
-    if cur - TD.updateResetTime >= 0.15 then
+    if cur - TD.updateResetTime >= 0.1 then
         TD:CheckAllBags()
         TD:CancelTimer()
     end

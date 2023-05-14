@@ -201,5 +201,5 @@ addon:registCategoryCreator(function()
             end
         }
     }
-	addon:initCategoryCheckBoxes(nil, checks)
+	addon:initCategoryCheckBoxes(1, nil, checks)
 end)
