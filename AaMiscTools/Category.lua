@@ -1,14 +1,20 @@
 local _, addon = ...
-addon.createUiFuncs = {}
 
+--代码初始化之前注册: 等合适创建界面的时候，会调用fun来生成界面。
 function addon:registCategoryCreator(fun)
+	addon.createUiFuncs = addon.createUiFuncs or {}
     table.insert(addon.createUiFuncs, fun)
+end
+
+--代码初始化之前注册: 等合适创建界面的时候，会用来生成menu
+function addon:registCategoryMenuName(name, index)
+	addon.createUiMenuNames = addon.createUiMenuNames or {}
+	addon.createUiMenuNames[index] = name
 end
 
 ----------------addon categories-----------------------------
 --- 采用多frame替换假装为多菜单模式。
-local categoryContents = {}; local contentIndex = 1
-local menus = {}
+local categoryContents, menuButtons = {}, {}
 
 local START_X, START_Y, NORMAL_OFF_X         = 20, -78, 35   --每一行的起始位置; 一页的起始位置；一行每个控件之间的x间隔
 local NORMAL_OFF_Y, SPLIT_OFF_Y              = 22, 15       --每行之间增加偏移; 分割线的高度
@@ -33,10 +39,45 @@ local function GetCategoryContent(index)
 
 	if index == 1 then
 		t.frame:Show()
-	else 
+	else
 		t.frame:Hide()
 	end
     return t
+end
+
+local function menuButtonFuncClick(btn)
+	local mid = btn.menuId
+	for j=1, #categoryContents do
+		if mid == j then --本按钮选中并显示对应的frame
+			GetCategoryContent(j).frame:Show()
+			menuButtons[j]:GetNormalTexture():SetVertexColor(1, 1, 1, .55)
+		else 			 --非按钮不选中并隐藏
+			GetCategoryContent(j).frame:Hide()
+			menuButtons[j]:GetNormalTexture():SetVertexColor(1, 1, 1, .25)
+		end
+	end
+end
+
+local function createMenuBtn(host, isSelected, btnText, width)
+	local button = CreateFrame('BUTTON', nil, host);
+	button:SetHeight(25)
+	button:SetNormalTexture([[Interface\TargetingFrame\UI-StatusBar]])
+	button:SetHighlightTexture([[Interface\TargetingFrame\UI-StatusBar]])
+	button:GetHighlightTexture():SetVertexColor(1, 1, 1, .25)
+	if isSelected then
+		button:GetNormalTexture():SetVertexColor(1, 1, 1, .55)
+	else
+		button:GetNormalTexture():SetVertexColor(1, 1, 1, .25)
+	end
+	local text = button:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+	text:SetJustifyH("CENTER")
+	text:SetPoint("CENTER", 2, 0)
+	text:SetTextColor(1.0, 1.0, 1.0, 1.0)
+	text:SetText(btnText)
+
+	button:SetWidth(width)
+
+	return button
 end
 
 local function onShow()
@@ -44,7 +85,7 @@ local function onShow()
 	local y = -10
 	do
 		local text = host:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-		text:SetPoint("TOPLEFT", host, START_X, y)
+		text:SetPoint("TOPLEFT", START_X, y)
 		text:SetJustifyH("LEFT")
 		text:SetText("AaMiscTools: 需要重载界面的配置有*号")
 	end
@@ -61,56 +102,30 @@ local function onShow()
 	y = y - 20
 	local x = 15
 
-	-- normal
-	local categoryMenus = {
-		"常用", "AH", "" --多放一个空行
-	}
-
-	for i=1, #categoryMenus do
-		local button = CreateFrame('BUTTON', nil, host);
-		button:SetHeight(25)
-		button:SetNormalTexture([[Interface\TargetingFrame\UI-StatusBar]])
-		button:SetHighlightTexture([[Interface\TargetingFrame\UI-StatusBar]])
-		button:GetHighlightTexture():SetVertexColor(1, 1, 1, .25)
-		if i == 1 then
-			button:GetNormalTexture():SetVertexColor(1, 1, 1, .55)
+	local menuSize = #addon.createUiMenuNames --要求不为空，即必须已经registCategory MenuName
+	local endWidth = TOTAL_WIDTH
+	local tmpx, btnWidth
+	for i=1, menuSize do
+		if i == menuSize then
+			btnWidth = endWidth
 		else
-			button:GetNormalTexture():SetVertexColor(1, 1, 1, .25)
+			btnWidth = 85
 		end
+		tmpx = x + (87 * (i - 1))
+		endWidth = endWidth - tmpx
 
-		button:SetPoint("TOPLEFT", host, x + (87 * (i - 1)), y)
-		if i == #categoryMenus then
-			button:SetWidth(600) --记得调整
-		else
-			button:SetWidth(85)
-		end
-
-		local text = button:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-		text:SetJustifyH("CENTER")
-		text:SetPoint("CENTER", 2, 0)
-		text:SetTextColor(1.0, 1.0, 1.0, 1.0)
-		text:SetText(categoryMenus[i])
-		
-		button:SetScript("OnClick", function(btn)
-			local mid = btn.menuId
-			for i=1, #categoryContents do
-				local frame = GetCategoryContent(i).frame
-				if mid == i then
-					frame:Show()
-				else
-					frame:Hide()
-				end
-			end
-		end)
-
+		local button = createMenuBtn(host, (i == 1), addon.createUiMenuNames[i], btnWidth)
+		button:SetPoint("TOPLEFT", tmpx, y)
+		button:SetScript("OnClick", menuButtonFuncClick)
 		button.menuId = i
-		menus[i] = button
+		menuButtons[i] = button
 	end
 
     -- 通知module创建ui
     for _, v in pairs(addon.createUiFuncs) do
         v()
 	end
+	addon.createUiFuncs = nil
 end
 
 function addon:categoriesUi()
@@ -146,7 +161,7 @@ function addon:initCategoryFont(index, title)
 	local f = t.frame
 
 	local text = f:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-	text:SetPoint("TOPLEFT", f, START_X, t.currentY)
+	text:SetPoint("TOPLEFT", START_X, t.currentY)
 	text:SetJustifyH("LEFT")
 	text:SetText(title)
 	t.currentY = t.currentY - 20
@@ -159,8 +174,7 @@ function addon:initCategoryEdit(index, title, words, editWidth, editHeight)
 
 	if title then
 		local text = f:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-		text:SetPoint("TOPLEFT", check, "TOPRIGHT", 1, 0)
-		text:SetPoint("TOPLEFT", f, START_X, t.currentY)
+		text:SetPoint("TOPLEFT", START_X, t.currentY)
 		text:SetJustifyH("LEFT")
 		text:SetText(title)
 		t.currentY = t.currentY - SPLIT_OFF_Y
@@ -186,8 +200,7 @@ function addon:initCategoryButton(index, title, btnText, btnWidth, btnHeight, on
 
 	if title then
 		local text = f:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-		text:SetPoint("TOPLEFT", check, "TOPRIGHT", 1, 0)
-		text:SetPoint("TOPLEFT", f, START_X, t.currentY)
+		text:SetPoint("TOPLEFT", START_X, t.currentY)
 		text:SetJustifyH("LEFT")
 		text:SetText(title)
 		t.currentY = t.currentY - NORMAL_OFF_Y
@@ -236,8 +249,7 @@ function addon:initCategoryCheckBoxes(index, title, checks, isTabIn) -- checks =
 
 	if title then
 		local text = f:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-		text:SetPoint("TOPLEFT", check, "TOPRIGHT", 1, 0)
-		text:SetPoint("TOPLEFT", f, START_X, t.currentY)
+		text:SetPoint("TOPLEFT", START_X, t.currentY)
 		text:SetJustifyH("LEFT")
 		text:SetText(title)
 		t.currentY = t.currentY - NORMAL_OFF_Y

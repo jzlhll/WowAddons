@@ -125,14 +125,14 @@ function AH:StartScan(isNew)
     self.scanningListCurPage = 0
     local name = self.scanningList[self.scanningListIndex]
     --print("StartScan: "..name.." page: "..self.scanningListCurPage)
-    ScanExactName(name, v)
+    ScanExactName(name, 0)
 
     self.scanTimer:StartTimer()
 end
 
 function AH:EndScan(suc)
     if self.isScanning then
-        if suc then 
+        if suc then
             print("扫描并保存结束!")
         else
             print("扫描中断!")

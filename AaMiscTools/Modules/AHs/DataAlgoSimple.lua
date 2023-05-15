@@ -36,7 +36,7 @@ function DA:Clear()
     self.dataTable = nil
 end
 
-function log(...)
+local function log(...)
   if false then print(...) end
 end
 
@@ -134,6 +134,7 @@ function DA:standardVariance() --原始数组的标准方差值计算方法
     local sum = 0
     local size = #self.dataTable
     local av = self:average()
+---@diagnostic disable-next-line: deprecated
     local pow = math.pow
 
     for i = 1, size do

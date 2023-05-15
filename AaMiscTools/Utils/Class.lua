@@ -60,16 +60,19 @@ addon.class_newInstance = function(classname, super)
     local superType = type(super)
     local cls
 
+    local fixSuperType = nil
     if superType ~= "function" and superType ~= "table" then
-        superType = nil
+        fixSuperType = nil
         super = nil
+    else
+        fixSuperType = superType
     end
 
-    if superType == "function" or (super and super.__ctype == 1) then
+    if fixSuperType == "function" or (super and super.__ctype == 1) then
         -- inherited from native C++ Object
         cls = {}
 
-        if superType == "table" then
+        if fixSuperType == "table" then
             -- copy fields from super
             for k,v in pairs(super) do cls[k] = v end
             cls.__create = super.__create

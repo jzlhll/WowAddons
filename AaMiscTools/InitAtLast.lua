@@ -48,8 +48,6 @@ local onEvent = function(frame, event, ...)
 		--ok print("loaded "..tostring(MiscDB))
 		lastEnterTime = GetTime()
 
-		addon:notifyEvent(INIT_ADDON)
-
 		addon.eventframe:SetScript("OnUpdate", OnTimerUpdate)
 		addon.eventframe:UnregisterEvent("LOADING_SCREEN_DISABLED")
     else

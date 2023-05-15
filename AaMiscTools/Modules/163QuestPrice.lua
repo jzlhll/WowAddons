@@ -88,23 +88,6 @@ local function SetTypeText(link, button)
     subTypeText:SetText("")
 end
 
-local EventFrame = CreateFrame("Frame")
-EventFrame:RegisterEvent("QUEST_COMPLETE")
-
-function EventFrame:QUEST_COMPLETE()
-    if QuestFrame:IsVisible() then
-        local chosen = GetMostExpensiveChoice()
-        if chosen then
-            btnAutoChoose:Enable();
-        else
-            btnAutoChoose:Disable();
-        end
-        if GetNumQuestChoices() > 0 and not chosen then
-            scheduleChange()
-        end
-    end
-end
-
 local function QuestPriceFrame_OnUpdate(self)
     local button = self:GetParent()
     button.subTypeText:SetText("")

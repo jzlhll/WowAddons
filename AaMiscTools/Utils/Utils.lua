@@ -56,7 +56,7 @@ end
 
 function addon:printTabInALine(table, level, maxLvl)
 	aline = ""
-	printInner(table, level, maxLevel)
+	printInner(table, level, maxLvl)
 	print(aline)
 end
 
