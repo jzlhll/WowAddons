@@ -29,6 +29,10 @@ function TC:StartTimer()
     end)
 end
 
+function TC:ChangeDeltaTs(newDeltaTs)
+	self.deltaTs = newDeltaTs
+end
+
 function TC:StopTimer()
     if self.eventFrame then
         self.eventFrame:SetScript("OnUpdate", nil)

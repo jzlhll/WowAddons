@@ -57,3 +57,6 @@ end
 
 addon.eventframe:SetScript('OnEvent', onEvent)
 addon.eventframe:RegisterEvent("LOADING_SCREEN_DISABLED")
+
+addon:registCategoryMenuName("一般", 1)
+addon:registCategoryMenuName("AH", 2)

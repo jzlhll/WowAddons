@@ -81,6 +81,7 @@ local function createMenuBtn(host, isSelected, btnText, width)
 end
 
 local function onShow()
+	if addon.createUiFuncs == nil then return end
 	local host = addon.categoryContentHost
 	local y = -10
 	do
@@ -102,7 +103,8 @@ local function onShow()
 	y = y - 20
 	local x = 15
 
-	local menuSize = #addon.createUiMenuNames --要求不为空，即必须已经registCategory MenuName
+	local menuSize = #addon.createUiMenuNames + 1--要求不为空，即必须已经registCategory MenuName
+	
 	local endWidth = TOTAL_WIDTH
 	local tmpx, btnWidth
 	for i=1, menuSize do
@@ -114,7 +116,7 @@ local function onShow()
 		tmpx = x + (87 * (i - 1))
 		endWidth = endWidth - tmpx
 
-		local button = createMenuBtn(host, (i == 1), addon.createUiMenuNames[i], btnWidth)
+		local button = createMenuBtn(host, (i == 1), addon.createUiMenuNames[i] or "", btnWidth)
 		button:SetPoint("TOPLEFT", tmpx, y)
 		button:SetScript("OnClick", menuButtonFuncClick)
 		button.menuId = i

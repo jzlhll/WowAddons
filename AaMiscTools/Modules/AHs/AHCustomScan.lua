@@ -5,7 +5,7 @@ local AH = addon.AHCustomScan
 local tabInsert, tabRemove = table.insert, table.remove
 
 local algo --过滤算法
-local AH_SCAN_DELTA = 0.48 -- 最小0.3 API要求
+local AH_SCAN_DELTA = 0.5 -- 最小0.3 API要求
 
 local function getAlgo()
     if algo then return algo end
@@ -21,8 +21,8 @@ function AH:NextTimeUpdate()
     if self.isScanning == 1 then
         AH:NextScanOnce()
     elseif self.isScanning == 2 then
-        print("扫描完成，开始保存")
         AH:AlgoAndSaveOnce()
+		self.scanTimer:ChangeDeltaTs(0.2)
     elseif self.isScanning == 3 then
         AH:EndScan(true)
     end
@@ -42,6 +42,7 @@ function AH:NextScanOnce()
     
         if self.scanningListIndex == 0 then
             self.isScanning = 2
+            print("扫描完成，开始保存")
         else
             local name = self.scanningList[self.scanningListIndex]
             ScanExactName(name, self.scanningListCurPage)
