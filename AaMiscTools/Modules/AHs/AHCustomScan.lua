@@ -13,8 +13,8 @@ local function getAlgo()
     return algo
 end
 
-local function ScanExactName(name, page)
-    QueryAuctionItems(name, nil, nil, page, false, 0, false, true, nil)
+local function ScanExactName(name, exactMatch, page)
+    QueryAuctionItems(name, nil, nil, page, false, 0, false, exactMatch, nil)
 end
 
 function AH:NextTimeUpdate()
@@ -44,8 +44,8 @@ function AH:NextScanOnce()
             self.isScanning = 2
             print("扫描完成，开始保存")
         else
-            local name = self.scanningList[self.scanningListIndex]
-            ScanExactName(name, self.scanningListCurPage)
+            local t = self.scanningList[self.scanningListIndex]
+            ScanExactName(t.name, t.exact, self.scanningListCurPage)
         end
     end
 end
@@ -124,9 +124,9 @@ function AH:StartScan(isNew)
 
     self.scanningListIndex = #self.scanningList
     self.scanningListCurPage = 0
-    local name = self.scanningList[self.scanningListIndex]
-    --print("StartScan: "..name.." page: "..self.scanningListCurPage)
-    ScanExactName(name, 0)
+    local t = self.scanningList[self.scanningListIndex]
+    --print("StartScan: "..t.name.." page: "..self.scanningListCurPage)
+    ScanExactName(t.name, t.exact, 0)
 
     self.scanTimer:StartTimer()
 end
@@ -170,9 +170,27 @@ function AH:Init()
 
     AH.defaultScanList = {}
     for _, v in pairs(AH.Constants.ScanList) do
-        tabInsert(AH.defaultScanList, v)
+		local t = {}
+		t.name = v
+		t.exact = true
+        tabInsert(AH.defaultScanList, t)
+    end
+	
+    for _, v in pairs(AH.Constants.FuzScanList) do
+		local t = {}
+		t.name = v
+		t.exact = false
+        tabInsert(AH.defaultScanList, t)
+    end
+
+    for _, v in pairs(AH.Constants.RaidList) do
+		local t = {}
+		t.name = v
+		t.exact = true
+        tabInsert(AH.defaultScanList, t)
     end
 end
+
 local strlower, format, strmatch, gmatch = string.lower, string.format, string.match, string.gmatch;
 function AH:ShowTipWithPricing(tip, itemLink)
     if self.isScanning then return end
