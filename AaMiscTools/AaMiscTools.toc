@@ -29,4 +29,6 @@ Modules/RaidMembersCd.lua
 Modules/AH.lua
 Modules/BagActions.lua
 
+Bosses/Guanxing.lua
+
 InitAtLast.lua

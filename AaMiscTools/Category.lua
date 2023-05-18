@@ -239,8 +239,10 @@ function addon:initCategoryCheckBox(index, title, initChecked, changeCheckFun)
 	end)
 end
 
---调用方：配置一行一组checkbox
-function addon:initCategoryCheckBoxes(index, title, checks, isTabIn) -- checks = {{name=, checked=, func=}, {...}}
+--调用方：配置一行一组checkbox。
+-- local checks = { {name=, checked=, func=}, {name=, checked=, func=}}
+--	第4个参数表示是否缩进一个横向偏移
+function addon:initCategoryCheckBoxes(index, title, checks, isTabIn)
     local t = GetCategoryContent(index)
 	local f = t.frame
 
