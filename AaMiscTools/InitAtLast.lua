@@ -25,21 +25,20 @@ function addon:notifyEvent(event, ...)
 end
 
 local function OnTimerUpdate()
-    local cur = GetTime()
-	local del = cur - lastEnterTime
-    if isLaterNotified == 0 and del >= 2 then
+	local delta = GetTime() - lastEnterTime
+    if isLaterNotified == 0 and delta >= 3 then
         isLaterNotified = 1
         addon:categoriesUi()
         addon:notifyEvent("later")
 		return
-	elseif isLaterNotified == 1 and del >= 4 then
+	elseif isLaterNotified == 1 and delta >= 5 then
         isLaterNotified = 2
         addon:notifyEvent("later2")
 		return
-    elseif isLaterNotified == 2 and del >= 6 then
+    elseif isLaterNotified == 2 and delta >= 7 then
         isLaterNotified = 3
         addon:notifyEvent("later3")
-        addon.eventframe:SetScript("OnUpdate", nil)
+		addon:GlobalTimerStop("InitAtLastMask")
     end
 end
 
@@ -48,7 +47,8 @@ local onEvent = function(frame, event, ...)
 		--ok print("loaded "..tostring(MiscDB))
 		lastEnterTime = GetTime()
 
-		addon.eventframe:SetScript("OnUpdate", OnTimerUpdate)
+		addon:GlobalTimerStart(OnTimerUpdate, "InitAtLastMask")
+
 		addon.eventframe:UnregisterEvent("LOADING_SCREEN_DISABLED")
     else
         addon:notifyEvent(event, ...)

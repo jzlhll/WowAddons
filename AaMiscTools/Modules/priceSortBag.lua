@@ -45,11 +45,11 @@ local function sort()
 end
 
 local f = CreateFrame("Frame")
-f:RegisterEvent("CHAT_MSG_SYSTEM")
+-- f:RegisterEvent("CHAT_MSG_SYSTEM")
 
-f:SetScript("OnEvent", function(self, event, message)
-	print("msg:"..message)
-end)
+-- f:SetScript("OnEvent", function(self, event, message)
+-- 	print("msg:"..message)
+-- end)
 
 local receiveMainMsg = function(event, ...)
 	if event == "later" then

@@ -12,6 +12,8 @@ Utils/Utils.lua
 Utils/TimerClass.lua
 Utils/TooltipTextUtil.lua
 
+Globals/GlobalTimer.lua
+
 Category.lua
 
 Modules/AHs/DataAlgoSimple.lua

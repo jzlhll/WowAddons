@@ -9,7 +9,7 @@ local GetContainerItemLink     = GetContainerItemLink or C_Container.GetContaine
 local GetContainerNumSlots     = GetContainerNumSlots or C_Container.GetContainerNumSlots
 
 addon.BagCanTrade = {}
-local TD = addon.BagCanTrade 
+local TD = addon.BagCanTrade
 
 local function timeMatch(showText)
     --中文
@@ -171,6 +171,21 @@ local initCombuctor = function()
     -- end
 end
 
+local function OnTimerUpdate()
+    TD:CheckAllBags()
+    addon:GlobalTimerStop("BagCanTradeTimerMask")
+end
+
+function TD:ResetTimer(imditely)
+    addon:GlobalTimerStop("BagCanTradeTimerMask")
+
+    if imditely and addon.isHasUpdateExtraText then
+        TD:CheckAllBags()
+    end
+
+    addon:GlobalTimerStart(OnTimerUpdate, "BagCanTradeTimerMask")
+end
+
 function TD:Init()
     addon.allBagSlotsItems = {}
 
@@ -182,36 +197,5 @@ function TD:Init()
     if IsAddOnLoaded("Combuctor") then
         initDTooltip()
         initCombuctor()
-    end
-end
- 
-local function OnTimerUpdate()
-    local cur = GetTime()
-    if cur - TD.updateResetTime >= 0.1 then
-        TD:CheckAllBags()
-        TD:CancelTimer()
-    end
-end
-
-function TD:ResetTimer(imditely)
-    TD:CancelTimer()
-
-    if imditely and addon.isHasUpdateExtraText then
-        TD:CheckAllBags()
-    end
-
-    if self.timerTickFrame == nil then
-        self.timerTickFrame = CreateFrame("Frame")
-    end
-    --print("set timer")
-    self.timerTickFrame:SetScript("OnUpdate", OnTimerUpdate)
-end
-
-function TD:CancelTimer()
-    self.updateResetTime = GetTime()
-
-    if self.timerTickFrame then
-        self.timerTickFrame:SetScript("OnUpdate", nil)
-        --print("cancel it")
     end
 end
