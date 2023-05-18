@@ -60,3 +60,4 @@ addon.eventframe:RegisterEvent("LOADING_SCREEN_DISABLED")
 
 addon:registCategoryMenuName("一般", 1)
 addon:registCategoryMenuName("AH", 2)
+addon:registCategoryMenuName("战斗", 3)

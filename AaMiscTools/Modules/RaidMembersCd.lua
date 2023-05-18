@@ -271,7 +271,7 @@ addon:registGlobalEvent(function(event, ...)
 end)
 
 addon:registCategoryCreator(function()
-	addon:initCategoryCheckBox(1, "监控团队减伤技能*", addon.getCfg("raidAbilityWatcher"), function(cb)
+	addon:initCategoryCheckBox(3, "监控团队减伤技能*", addon.getCfg("raidAbilityWatcher"), function(cb)
 		local c = not addon.getCfg("raidAbilityWatcher")
         addon.setCfg("raidAbilityWatcher", c)
 	end)

@@ -145,7 +145,6 @@ local function initSelf()
     if showQuestItemLevel == false and showQuestItemSubType == false then
         return
     end
-
     --6.0是后创建的按钮
     hooksecurefunc("QuestInfo_GetRewardButton", function(rewardsFrame, index)
         local rewardButtons = rewardsFrame == QuestInfoRewardsFrame and rewardsFrame.RewardButtons or nil; --or MapQuestInfoRewardsFrame, but we don't create text on those.
@@ -155,15 +154,13 @@ local function initSelf()
     end)
 end
 
-local receiveMainMsg
-receiveMainMsg = function(event, ...)
+addon:registGlobalEvent(function(event, ...)
     if event == "later" then
         initSelf()
         return true
     end
     return false
-end
-addon:registGlobalEvent(receiveMainMsg)
+end)
 
 addon:registCategoryCreator(function()
     local checks = {

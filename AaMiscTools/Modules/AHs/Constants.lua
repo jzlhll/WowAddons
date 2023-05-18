@@ -23,8 +23,8 @@ AH.Constants.FuzScanList = {
 }
 
 AH.Constants.RaidList = {
-    "深渊水晶", 
-    
+    "深渊水晶",
+
     --其他扫描项
     "符文宝珠",
     "龙眼石",

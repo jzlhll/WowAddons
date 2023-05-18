@@ -129,3 +129,30 @@ function addon:RemoveRepetition(TableData)
 	end
     return result
 end
+
+local function CoreUIMakeMovable_OnMouseDown(self)
+	local target = self._moveTarget
+	if target:IsMovable() then
+		target:StartMoving()
+	end
+end
+
+local function CoreUIMakeMovable_OnMouseUp(self)
+	local target = self._moveTarget
+	target:StopMovingOrSizing()
+end
+
+function addon:SetUiMoveable(frame, target)
+	if target ~= nil then
+		frame._moveTarget = target
+		target:SetMovable(true)
+		target:SetClampedToScreen(true)
+	else
+		frame._moveTarget = frame
+		frame:SetMovable(true)
+		frame:SetClampedToScreen(true)
+	end
+	frame:EnableMouse(true)
+	frame:SetScript("OnMouseDown", CoreUIMakeMovable_OnMouseDown)
+	frame:SetScript("OnMouseUp", CoreUIMakeMovable_OnMouseUp)
+end

@@ -28,6 +28,7 @@ Modules/AutoLoads.lua
 Modules/RaidMembersCd.lua
 Modules/AH.lua
 Modules/BagActions.lua
+Modules/CombatTime.lua
 
 Bosses/Guanxing.lua
 

@@ -41,6 +41,9 @@ local defaultCfg = {
 
 	--团队技能
 	["raidAbilityWatcher"] = false,
+
+	--combatTime
+	["combatTime"] = true,
 }
 
 -- 在初始化完成后，检查
