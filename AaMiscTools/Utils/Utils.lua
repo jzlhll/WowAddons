@@ -2,6 +2,13 @@
 ------init before anything
 local _, addon = ... ; addon = addon or {}
 
+function addon:tabContains(tab, item)
+	for _, v in pairs(tab) do
+		if v == item then return true end
+	end
+	return false
+end
+
 local key = ""
 function addon:printTab(table, level, maxLvl)
 	local indent = ""
@@ -64,25 +71,24 @@ local function _quickSort(sortList, left, right)
 	if left > right then
 		return
 	end
-	
+
 	local i = left
 	local j = right
 	local guard = sortList[left]
 	while i ~= j do
-		
 		while sortList[j] >= guard and i < j do
 			j = j - 1
 		end
-	
+
 		while sortList[i] <= guard and i < j do
 			i = i + 1
 		end
-	
+
 		if i < j then
 			sortList[i], sortList[j] = sortList[j], sortList[i]
 		end
  	end
-	
+
 	sortList[left], sortList[i] = sortList[i], sortList[left]
 	_quickSort(sortList, left, i-1)
 	_quickSort(sortList, i+1, right)
@@ -130,6 +136,8 @@ function addon:RemoveRepetition(TableData)
     return result
 end
 
+------------mouse over=========
+
 local function CoreUIMakeMovable_OnMouseDown(self)
 	local target = self._moveTarget
 	if target:IsMovable() then
@@ -140,9 +148,11 @@ end
 local function CoreUIMakeMovable_OnMouseUp(self)
 	local target = self._moveTarget
 	target:StopMovingOrSizing()
+	local func = target._moveTarget._EndOfMovingFunc
+	if func then func() end
 end
 
-function addon:SetUiMoveable(frame, target)
+function addon:SetUiMoveable(frame, target, EndOfMovingFunc)
 	if target ~= nil then
 		frame._moveTarget = target
 		target:SetMovable(true)
@@ -152,7 +162,20 @@ function addon:SetUiMoveable(frame, target)
 		frame:SetMovable(true)
 		frame:SetClampedToScreen(true)
 	end
+
+	frame._moveTarget._EndOfMovingFunc = EndOfMovingFunc
+
 	frame:EnableMouse(true)
 	frame:SetScript("OnMouseDown", CoreUIMakeMovable_OnMouseDown)
 	frame:SetScript("OnMouseUp", CoreUIMakeMovable_OnMouseUp)
+end
+
+-----------------end of move over
+
+function addon:tabLength(t)
+    local len=0
+    for k,v in pairs(t) do
+        len=len+1
+    end
+    return len
 end

@@ -1,6 +1,7 @@
 ------init before anything
 local _, addon = ... ; addon = addon or {}
 addon.eventframe = CreateFrame('Frame')
+addon.teamTab = {}
 
 local defaultCfg = {
 	-- [显示任务装备的一个字名字]
@@ -44,6 +45,7 @@ local defaultCfg = {
 
 	--combatTime
 	["combatTime"] = true,
+	["guanxingAlert"] = false,
 }
 
 -- 在初始化完成后，检查
@@ -97,5 +99,36 @@ function addon:unRegistGlobalEvent(func)
 		if addon.modFuncs[i] == func then
 			table.remove(addon.modFuncs, i)
 		end
+	end
+end
+
+----------------------------------
+--注册一个函数func，监听teamMembers更新
+addon.teamMembersUpdateFuncs = {}
+
+function addon:registTeamMembersUpdate(func)
+	if type(func) == "function" then
+	    for _,v in pairs(addon.teamMembersUpdateFuncs) do
+			if v == func then return end
+   		end
+
+		table.insert(addon.teamMembersUpdateFuncs, func)
+	end
+end
+
+function addon:unRegistTeamMembersUpdate(func)
+	-- 倒序遍历：在for循环中进行删除的正确遍历方式
+	for i = #addon.teamMembersUpdateFuncs, 1, -1 do
+		if addon.teamMembersUpdateFuncs[i] == func then
+			table.remove(addon.teamMembersUpdateFuncs, i)
+		end
+	end
+end
+
+function addon:notifyTeamMembersUpdate()
+	-- 倒序遍历：在for循环中进行删除的正确遍历方式
+	for i = #addon.teamMembersUpdateFuncs, 1, -1 do
+		local f = addon.teamMembersUpdateFuncs[i]
+		if f then f() end
 	end
 end

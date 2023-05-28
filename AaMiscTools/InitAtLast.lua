@@ -1,14 +1,13 @@
 local _, addon = ...
-
+local teamTab = addon.teamTab
 -----------------init codes---------------
+
 local GetTime = GetTime
-local DELAY_TIME, DELAY_TIME_X2 = 4, 8
 local lastEnterTime
 local isLaterNotified = 0
 
 function addon:notifyEvent(event, ...)
 	local delTab = {}
-	local func
     for _, func in pairs(addon.modFuncs) do
         if func then
 			local isDel = func(event, ...)
@@ -24,12 +23,25 @@ function addon:notifyEvent(event, ...)
 	delTab = nil
 end
 
+local function updateTeamTab()
+    for i = 1, GetNumGroupMembers() do
+        local name, _, _, _, _, class = GetRaidRosterInfo(i)
+		if name then
+			teamTab[name] = class
+		end
+    end
+
+    addon:notifyTeamMembersUpdate()
+end
+
 local function OnTimerUpdate()
 	local delta = GetTime() - lastEnterTime
     if isLaterNotified == 0 and delta >= 3 then
         isLaterNotified = 1
         addon:categoriesUi()
         addon:notifyEvent("later")
+
+		updateTeamTab()
 		return
 	elseif isLaterNotified == 1 and delta >= 5 then
         isLaterNotified = 2
@@ -46,10 +58,11 @@ local onEvent = function(frame, event, ...)
 	if event == 'LOADING_SCREEN_DISABLED' then
 		--ok print("loaded "..tostring(MiscDB))
 		lastEnterTime = GetTime()
-
 		addon:GlobalTimerStart(OnTimerUpdate, "InitAtLastMask")
-
 		addon.eventframe:UnregisterEvent("LOADING_SCREEN_DISABLED")
+
+	elseif event == 'GROUP_ROSTER_UPDATE' then
+		updateTeamTab()
     else
         addon:notifyEvent(event, ...)
     end
@@ -57,6 +70,7 @@ end
 
 addon.eventframe:SetScript('OnEvent', onEvent)
 addon.eventframe:RegisterEvent("LOADING_SCREEN_DISABLED")
+addon.eventframe:RegisterEvent("GROUP_ROSTER_UPDATE")
 
 addon:registCategoryMenuName("一般", 1)
 addon:registCategoryMenuName("AH", 2)

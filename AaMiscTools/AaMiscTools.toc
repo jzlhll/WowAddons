@@ -20,16 +20,13 @@ Modules/AHs/DataAlgoSimple.lua
 Modules/AHs/Constants.lua
 Modules/AHs/AHCustomScan.lua
 Modules/AHs/Hooks.lua
-
 Modules/BagCanTrade.lua
 Modules/163QuestPrice.lua
 Modules/iColor.lua
 Modules/AutoLoads.lua
-Modules/RaidMembersCd.lua
 Modules/AH.lua
 Modules/BagActions.lua
-Modules/CombatTime.lua
 
-Bosses/Guanxing.lua
+Raids/CombatTime.lua
 
 InitAtLast.lua

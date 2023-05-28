@@ -2,20 +2,25 @@ local _, addon = ...
 local GetTime = GetTime
 
 local CombatFrame
+local FONT_SIZE, FRAME_HEIGHT = 21, 30
 
 local function initCombatFrame()
 	if CombatFrame then return end
 	local cf = CreateFrame("Frame", "AaMiscCombatFrame", UIParent)
 	cf:SetWidth(80)
-	cf:SetHeight(26)
-	cf:SetPoint("TOP", 0, -8)
+	cf:SetHeight(FRAME_HEIGHT)
+	local pos = MiscDB.CombatTimePosition or {
+		x = 0,
+		y = -8
+	}
+	cf:SetPoint("TOP", pos.x, pos.y)
 
 	local texture = cf:CreateTexture(nil, "OVERLAY")
 	texture:SetAllPoints(cf)
 	texture:SetAtlas("search-select")
 
 	local text = cf:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-	text:SetFont(NumberFontNormal:GetFont(), 18, "OUTLINE")
+	text:SetFont(NumberFontNormal:GetFont(), FONT_SIZE, "OUTLINE")
 	text:SetPoint("TOP", 0, -3)
 	text:SetJustifyH("LEFT")
 	text:SetText("0.0")
@@ -23,11 +28,17 @@ local function initCombatFrame()
 
 	cf.numberTextView = text
 
-	addon:SetUiMoveable(cf)
+	addon:SetUiMoveable(cf, nil, function()
+		local a, _, b, c, d = CombatFrame:GetPoint()
+		MiscDB.CombatTimePosition = {
+			x = c,
+			y = d
+		}
+	end)
 	CombatFrame = cf
 end
 
-local function EventStartTimer(start)
+local function EventTimerFun(start)
     if start then
         CombatFrame.startTs = GetTime()
         CombatFrame.lastTs = 0
@@ -62,14 +73,14 @@ local function EventLeave(encounter)
     if CombatFrame.encounter and not encounter and not IsSolo() then return end
     CombatFrame.encounter = nil
 
-    EventStartTimer(false)
+    EventTimerFun(false)
 end
 
 local function EventEnter(encounter)
 	if encounter then CombatFrame.encounter = true end
 	if CombatFrame.startTs then return end
 
-	EventStartTimer(true)
+	EventTimerFun(true)
 end
 
 local function Init(enable)

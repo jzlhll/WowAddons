@@ -1,6 +1,6 @@
 local _, addon = ...
 local updateFun, scanTimer, subUpdateFuncs
-local DELTA_TS = 0.05
+local DELTA_TS = 0.075
 
 function addon:GlobalTimerStart(subUpdateFunc, mask)
     if subUpdateFuncs == nil then
@@ -25,7 +25,7 @@ function addon:GlobalTimerStart(subUpdateFunc, mask)
     subUpdateFuncs[mask] = subUpdateFunc
 
     if lastSize == 0 then
-        scanTimer:StartTime()
+        scanTimer:StartTimer()
     end
 end
 

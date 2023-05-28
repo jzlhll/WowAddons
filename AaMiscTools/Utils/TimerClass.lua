@@ -20,7 +20,7 @@ function TC:StartTimer()
     self.timerEventFrame:SetScript("OnUpdate", function()
         local curTs = GetTime()
         if curTs - self.lastTime > self.deltaTs then
-            self.updatedTime = curTs
+            self.lastTime = curTs
             self.updateFunc(self.obj)
         end
     end)
