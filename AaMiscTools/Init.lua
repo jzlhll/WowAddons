@@ -49,25 +49,14 @@ local defaultCfg = {
 }
 
 -- 在初始化完成后，检查
-function addon.getCfg(name)
-	MiscDB = MiscDB or {}
-	local c = MiscDB[name]
-	if c == nil then
-		MiscDB[name] = defaultCfg[name]
-		c = defaultCfg[name]
-	end
-
-	return c
-end
-
-function addon.getCfgWithDefault(name, defValue)
+function addon.getCfg(name, defaultValue)
 	MiscDB = MiscDB or {}
 	local c = MiscDB[name]
 	if c == nil then
 		c = defaultCfg[name]
 		if c == nil then
-			MiscDB[name] = defValue
-			return defValue
+			MiscDB[name] = defaultValue
+			return defaultValue
 		end
 	end
 

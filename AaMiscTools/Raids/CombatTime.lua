@@ -9,11 +9,12 @@ local function initCombatFrame()
 	local cf = CreateFrame("Frame", "AaMiscCombatFrame", UIParent)
 	cf:SetWidth(80)
 	cf:SetHeight(FRAME_HEIGHT)
-	local pos = MiscDB.CombatTimePosition or {
-		x = 0,
-		y = -8
-	}
-	cf:SetPoint("TOP", pos.x, pos.y)
+	if MiscDB.CombatTimePosition2 then
+		local p = MiscDB.CombatTimePosition2
+		cf:SetPoint(p.a, UIParent, p.b, p.c, p.d)
+	else
+		cf:SetPoint("TOP", 0, -8)
+	end
 
 	local texture = cf:CreateTexture(nil, "OVERLAY")
 	texture:SetAllPoints(cf)
@@ -30,9 +31,11 @@ local function initCombatFrame()
 
 	addon:SetUiMoveable(cf, nil, function()
 		local a, _, b, c, d = CombatFrame:GetPoint()
-		MiscDB.CombatTimePosition = {
-			x = c,
-			y = d
+		MiscDB.CombatTimePosition2 = {
+			a = a,
+			b = b,
+			c = c,
+			d = d
 		}
 	end)
 	CombatFrame = cf

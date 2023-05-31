@@ -34,6 +34,16 @@ addon:registCategoryCreator(function()
         end
 	end)
 
+    addon:initCategoryCheckBox(1, "伤害数字放大", getCfg("combatNumberSize1_5", false), function(cb)
+        local sh = not getCfg("combatNumberSize1_5")
+		setCfg("combatNumberSize1_5", sh)
+        if sh then
+            ConsoleExec("WorldTextScale 1.5")
+        else
+            ConsoleExec("WorldTextScale 1")
+        end
+	end)
+
     addon:initCategoryCheckBox(1, "进入游戏自动收起任务栏*", getCfg("autoHideQuestWatchFrame"), function(cb)
 		local c = not getCfg("autoHideQuestWatchFrame")
         setCfg("autoHideQuestWatchFrame", c)
@@ -44,7 +54,7 @@ addon:registCategoryCreator(function()
         {
             name = "远",
             checked = maxZoom == 2.6,
-            func = function() 
+            func = function()
                 maxZoomCheckBoxes[1].checked = false
                 maxZoomCheckBoxes[2].checked = true
 
@@ -55,7 +65,7 @@ addon:registCategoryCreator(function()
         {
             name = "一般",
             checked = maxZoom == 1.8,
-            func = function() 
+            func = function()
                 maxZoomCheckBoxes[2].checked = true
                 maxZoomCheckBoxes[1].checked = false
 
@@ -103,6 +113,15 @@ local function init()
         local expandBtn = WatchFrameCollapseExpandButton
         if expandBtn then
             expandBtn:GetScript("OnClick")(expandBtn)
+        end
+    end
+
+    local combat1_5 = getCfg("combatNumberSize1_5", true)
+    if combat1_5 ~= nil then
+        if combat1_5 then
+            ConsoleExec("WorldTextScale 1.5")
+        else
+            ConsoleExec("WorldTextScale 1")
         end
     end
 end
