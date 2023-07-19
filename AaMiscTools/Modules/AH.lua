@@ -34,7 +34,7 @@ addon:registGlobalEvent(function(event, ...)
 		initButtonFrame()
 		buttonFrame:Show()
 	elseif event == "AUCTION_HOUSE_CLOSED" then
-		AH:EndScan()
+		AH:EndScan(false)
 		buttonFrame:Hide()
 	elseif event == "later" then
 		local show = addon.getCfg("scanAH")

@@ -61,6 +61,7 @@ local onEvent = function(frame, event, ...)
 		addon:GlobalTimerStart(OnTimerUpdate, "InitAtLastMask")
 		addon.eventframe:UnregisterEvent("LOADING_SCREEN_DISABLED")
 
+		addon:notifyEvent("LOADING_SCREEN_DISABLED")
 	elseif event == 'GROUP_ROSTER_UPDATE' then
 		updateTeamTab()
     else

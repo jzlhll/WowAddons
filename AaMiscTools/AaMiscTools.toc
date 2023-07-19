@@ -27,6 +27,8 @@ Modules/AutoLoads.lua
 Modules/AH.lua
 Modules/BagActions.lua
 
+Raids/CombatEvent.lua
+Raids/Toc_shuangziHelper.lua
 Raids/CombatTime.lua
 
 InitAtLast.lua

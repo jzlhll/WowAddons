@@ -2,7 +2,7 @@ local _, addon = ...
 local GetTime = GetTime
 
 local CombatFrame
-local FONT_SIZE, FRAME_HEIGHT = 21, 30
+local FONT_SIZE, FRAME_HEIGHT = 21, 28
 
 local function initCombatFrame()
 	if CombatFrame then return end
@@ -20,12 +20,12 @@ local function initCombatFrame()
 	texture:SetAllPoints(cf)
 	texture:SetAtlas("search-select")
 
-	local text = cf:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-	text:SetFont(NumberFontNormal:GetFont(), FONT_SIZE, "OUTLINE")
+	local text = cf:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+	text:SetFont(text:GetFont(), FONT_SIZE, "OUTLINE")
 	text:SetPoint("TOP", 0, -3)
 	text:SetJustifyH("LEFT")
 	text:SetText("0.0")
-	text:SetTextColor(0, 1, 0)
+	text:SetTextColor(0.035, 0.91, 0.082)
 
 	cf.numberTextView = text
 
@@ -47,7 +47,7 @@ local function EventTimerFun(start)
         CombatFrame.lastTs = 0
         CombatFrame:SetScript("OnUpdate", function(self)
 			local now = GetTime()
-			if now - self.lastTs > 0.05 then
+			if now - self.lastTs > 0.07 then
 				local combat = now - self.startTs
 				if combat < 60 then
 					self.numberTextView:SetFormattedText("%.1f", combat)
@@ -56,11 +56,11 @@ local function EventTimerFun(start)
 				end
 			end
 		end)
-        CombatFrame.numberTextView:SetTextColor(1, 1, .2, 1)
+        CombatFrame.numberTextView:SetTextColor(1, 1, .2)
         --CombatFrame.Anim:Play()
     else
         CombatFrame.startTs = nil
-        CombatFrame.numberTextView:SetTextColor(0, 1, 0, 1)
+        CombatFrame.numberTextView:SetTextColor(0.035, 0.92, 0.082)
         CombatFrame:SetScript("OnUpdate", nil)
         --CombatFrame.Anim:Stop()
     end
@@ -71,12 +71,15 @@ local function IsSolo()
     return not IsInGroup() or (GetNumGroupMembers() == 1 and not UnitExists("party1") and not UnitExists("raid1"))
 end
 
-local function EventLeave(encounter)
-    if not CombatFrame.startTs then return end
-    if CombatFrame.encounter and not encounter and not IsSolo() then return end
-    CombatFrame.encounter = nil
-
-    EventTimerFun(false)
+local function EventLeave(encounter, success)
+	if success then
+		if not CombatFrame.startTs then return end
+		if CombatFrame.encounter and not encounter and not IsSolo() then return end
+		CombatFrame.encounter = nil
+		CombatFrame.reAliveTime = nil
+		CombatFrame.deadCount = nil
+		EventTimerFun(false)
+	end
 end
 
 local function EventEnter(encounter)
@@ -84,6 +87,22 @@ local function EventEnter(encounter)
 	if CombatFrame.startTs then return end
 
 	EventTimerFun(true)
+end
+
+local function EventReAlive()
+	if CombatFrame.deadCount then
+		CombatFrame.deadCount = CombatFrame.deadCount + 1
+		if CombatFrame.deadCount == 1 then
+			CombatFrame.reAliveTime = GetTime()
+		elseif CombatFrame.deadCount == 2 then
+			if GetTime() - CombatFrame.reAliveTime < 0.5 then
+				CombatFrame.numberTextView:SetTextColor(1, 1, .2)
+			end
+
+			CombatFrame.reAliveTime = nil
+			CombatFrame.deadCount = nil
+		end
+	end
 end
 
 local function Init(enable)
@@ -96,12 +115,29 @@ local function Init(enable)
 			CombatFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
 			CombatFrame:RegisterEvent("ENCOUNTER_START")
 			CombatFrame:RegisterEvent("ENCOUNTER_END")
+			CombatFrame:RegisterEvent("PLAYER_DEAD")
+			CombatFrame:RegisterEvent("PLAYER_ALIVE")
 
-			CombatFrame:SetScript("OnEvent", function(self, event)
+			CombatFrame:SetScript("OnEvent", function(self, event, encounterID,_,_,_,success)
 				if event == "PLAYER_REGEN_DISABLED" or event == "ENCOUNTER_START" then
-					EventEnter(event == "ENCOUNTER_START")
-				elseif event == "PLAYER_REGEN_ENABLED" or event == "ENCOUNTER_END" then
-					EventLeave(event == "ENCOUNTER_END")
+					if CombatFrame.startTs ~= nil then
+						EventReAlive()
+					else
+						EventEnter(event == "ENCOUNTER_START")
+					end
+				elseif event == "PLAYER_REGEN_ENABLED" then
+					EventLeave(false, true)
+				elseif event == "ENCOUNTER_END" then
+					EventLeave(true, success)
+				elseif event == "PLAYER_DEAD" then
+					if CombatFrame.startTs then
+						CombatFrame.numberTextView:SetTextColor(1, 0.2, 0)
+						CombatFrame.deadCount = 0
+					end
+				elseif event == "PLAYER_ALIVE" then
+					if CombatFrame.startTs ~= nil then
+						EventReAlive()
+					end
 				end
 			end)
 		end

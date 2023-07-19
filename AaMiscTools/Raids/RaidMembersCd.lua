@@ -105,17 +105,14 @@ local function timerCallback(self, elapsed)
 	end
 end
 
-local function combatEvent(frame, event, ...)
-	local _, eventType, _, _, name, _, _, _, _, _, _, spellID = CombatLogGetCurrentEventInfo()
-	if eventType ~= "SPELL_CAST_SUCCESS" then return end
-	if not spellID then return end
+local function combatEvent(timestamp, subevent, hideCaster, sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags, spellId, spellName)
 	--记录
-	local markedSpellId = SpellMarks[spellID]
+	local markedSpellId = SpellMarks[spellId]
 	if markedSpellId then
-		local someonesSpells = SpellMarksMembers[name]
+		local someonesSpells = SpellMarksMembers[sourceName]
 		if someonesSpells == nil then
-			SpellMarksMembers[name] = {}
-			someonesSpells = SpellMarksMembers[name]
+			SpellMarksMembers[sourceName] = {}
+			someonesSpells = SpellMarksMembers[sourceName]
 		end
 		if someonesSpells[markedSpellId] == nil then
 			someonesSpells[markedSpellId] = SpellMaps[markedSpellId].cdx
@@ -123,16 +120,16 @@ local function combatEvent(frame, event, ...)
 	end
 	--SpellMarks = {["memberName1"]= {"spellId1" = 200, "spellId2" = 300}, ...}
 
-	local spellMap = SpellMaps[spellID]; if not spellMap then return end
-	local class = addon.teamTab[name]; if not class then return end
+	local spellMap = SpellMaps[spellId]; if not spellMap then return end
+	local class = addon.teamTab[sourceName]; if not class then return end
 
 	local cd
-	if SpellMarks[name] then
-		cd = SpellMarks[name][spellID] or spellMap.cd
+	if SpellMarks[sourceName] then
+		cd = SpellMarks[sourceName][spellId] or spellMap.cd
 	else
 		cd = spellMap.cd
 	end
-	createOrUpdateALine(#allLines, name, class, spellMap.nm, cd)
+	createOrUpdateALine(#allLines, sourceName, class, spellMap.nm, cd)
 end
 
 local function updateTeamTab()
@@ -143,15 +140,13 @@ local function updateTeamTab()
 		if not isRegistCombatEvent then
 			isRegistCombatEvent = true
 			if debug then print("AaMiscCombat 注册战斗event") end
-			frame:SetScript('OnEvent', combatEvent)
-			frame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+			addon:RegistGlobalCombatEvent("raidMembersCd", nil, combatEvent)
 		end
 	else
 		if isRegistCombatEvent then
 			isRegistCombatEvent = false
 			if debug then print("AaMiscCombat 不再注册战斗event") end
-			frame:SetScript('OnEvent', nil)
-			frame:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+			addon:UnRegistGlobalCombatEvent("raidMembersCd", nil)
 		end
 	end
 end

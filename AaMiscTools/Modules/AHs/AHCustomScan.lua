@@ -132,15 +132,30 @@ function AH:StartScan(isNew)
 end
 
 function AH:EndScan(suc)
-    if self.isScanning then
-        if suc then
-            print("扫描并保存结束!")
-        else
-            print("扫描中断!")
-        end
-        self.scanTimer:StopTimer()
-        self.isScanning = nil
+    if self.isScanning == nil then
+        return
     end
+
+    if self.isScanning == 1 then
+        self.isScanning = 2
+        print("扫描中断! 开始保存...")
+        return
+    end
+
+    if self.isScanning == 2 then
+        --是可以走开的。所以无所谓。
+        return
+    end
+
+    if suc then
+        print("扫描并保存结束!")
+    else
+        print("扫描中断!")
+    end
+    if self.scanTimer then
+        self.scanTimer:StopTimer()
+    end
+    self.isScanning = nil
 end
 
 function AH:DumpAuctions(view)
